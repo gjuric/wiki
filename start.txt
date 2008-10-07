@@ -1,3 +1,3 @@
-===== Linux =====
+===== Wiki pages in Croatian language =====
 
   * [[Linux:Debian server]] (in Croatian only for now) - kako instalirati Linux server koristeći Debian distribuciju, podesiti web server, DNS, DC hub, Jabber, ...
