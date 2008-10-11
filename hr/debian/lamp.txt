@@ -1,0 +1,40 @@
+
+
+======LAMP======
+
+U ovom koraku instalirat ćemo web poslužitelje Apache, skriptni jezik PHP i bazu podataka MySQL. 
+
+
+=====MySQL=====
+
+Krenimo prvo s MySQL-om:
+
+  apt-get install mysql-server mysql-client libmysqlclient15-dev
+
+Potvrdite instalaciju i strpite se dok se ne skine otprilike 55MB i instalacija ne dovrši. Iako defaultno na Debianu MySQL "sluša" samo na localhost-u, kako bi spriječili zlouporabu od druhih korisnika koji možda imaju korisnički račun na serveru, podesit ćemo lozinku za root korisnika u bazi podataka:
+
+  mysqladmin -u root password vasa-lozinka-za-root-korisnika
+
+Kao što postoje korisnički računi za čitav server, tako postoje i korisnički računi za MySQL koje je potrebno dodatno podesiti.
+
+=====Apache=====
+
+Unesite u terminal:
+
+  apt-get install apache2 apache2-doc apache2-mpm-prefork apache2-utils libexpat1 ssl-cert
+
+
+=====PHP=====
+
+Unesite u terminal (tekst je ovdje razlomljen zbog prikaza, morate ga paste-ati u jednom komadu):
+
+  apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev php5-gd \
+  php5-idn php-pear php5-imagick php5-imap php5-json php5-mcrypt php5-memcache \
+  php5-mhash php5-ming php5-mysql php5-ps php5-pspell php5-recode php5-snmp \
+  php5-sqlite php5-tidy php5-xmlrpc php5-xsl
+
+Na pitanje: Continue installing libc-client without Maildir support?  odgovorite potvrdno (defaultna opcija)
+
+I to je to, upravo ste instalirali svoj web server. Stranice smještate u **/var/www/apache2-default/** , a ukoliko svoj internet preglednik uputite na adresu servera trebala bi vas dočekati poruka "**It works!**".
+
+Za podešavanje dodatnih domena koje će web server posluživati ću vas uputiti na dokumentaciju i vašu snalažljivost. Ovdje ću samo napomenuti da Debian ima zgodne utility-je **a2enmod**, **a2dismod**, **a2ensite**, **a2dissite** koji će vam pomoći prilikom uključivanja Apache modula i posluživanja dodatnih domena. Što i kako dalje je na vama, ukoliko vam je potrebno.
