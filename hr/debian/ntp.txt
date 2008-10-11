@@ -1,0 +1,45 @@
+====== Sinkronizacija vremena (NTP) ======
+
+Kako bi naš server uvijek imao točno vrijeme instalirat ćemo NTP deamon.
+
+  apt-get install ntp
+
+U ranijim verzijama Debiana (Sarge) bilo je više paketa koji su se bavili NTP-om. Na Etchu, koji koristimo u ovim uputama, su oni objedinjeni u jedan paket - **ntp**. **ntpdate** je isto zastario (služi za jednokratno naštimavanje vremena) i preporučam da ga ne instaliravate, pokretanje deamona s opcijom -g je zamijenilo ntpdate.
+
+Debianom ntp paket dolazi već sa nekim preddefiniranim NTP serverima (stratum 2), njih ćemo zamijeniti Carnetovim NTP serverima. Editirajte /etc/ntp.conf
+
+  nano /etc/ntp.conf
+
+Zamijenite
+
+  server 0.debian.pool.ntp.org iburst
+  server 1.debian.pool.ntp.org iburst
+  server 2.debian.pool.ntp.org iburst
+  server 3.debian.pool.ntp.org iburst
+
+sa
+
+  server zg1.ntp.carnet.hr
+  server zg2.ntp.carnet.hr
+  server st.ntp.carnet.hr
+  server ri.ntp.carnet.hr
+  server os.ntp.carnet.hr
+
+Ponovno pokrenite ntp deamon:
+
+  invoke-rc.d ntp restart
+
+Status ntp-a možete provjeriti sa **ntpq -p**, ovo je primjer ispisa:
+
+  grunf:~# ntpq -p
+       remote           refid      st t when poll reach   delay   offset  jitter
+  ==============================================================================
+   zg1.ntp.CARNet. 161.53.1.2       2 u   58   64    3    7.157  106.619   4.158
+   zg2.ntp.CARNet. 161.53.1.2       2 u   57   64    3    7.677   25.934   4.792
+   duje.st.carnet. 161.53.1.2       2 u   58   64    3   12.030   21.932   6.873
+   morcic.RI.CARNe 161.53.1.2       2 u   58   64    3   11.796   26.527   7.751
+   po.os.carnet.hr 161.53.1.2       2 u   56   64    3   11.923   21.056   5.070
+
+Nakon nekog vremena polje reach bi trebalo biti veće od 0, što znači da je deamon sinkroniziran sa ostalim NTP serverima.
+
+Na drugim routerima i serverima u mreži ćete umjeto popisa Carnetovih NTP servera unijeti samo adresu servera koje ste upravo podesili. Windowse sada također možete sinkronizirati sa svojim serverom, dva puta kliknite na sat u tray-u, odaberite tab **Internet Time** i umjesto time.windows.com unesite adresu svog servera.
