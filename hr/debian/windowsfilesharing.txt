@@ -1,0 +1,89 @@
+======Windows File Sharing (Samba)======
+
+Samba je dostupna kao paket u repozitoriju, stoga je instaliravamo sa:
+
+  apt-get install samba
+
+Kada se prilikom instalacije pojavi pitanje:
+
+<code>Please specify the workgroup you want this server to appear to be in
+when queried by clients. Note that this parameter also controls the domain
+name used with the security=domain setting.
+
+Workgroup/Domain Name:</code>
+
+upišite **WORKGROUP**, ili koju već Workgroup koristite na svom Windows računalu.
+
+Na pitanje:
+
+<code>If your computer gets IP address information from a DHCP server on the
+network, the DHCP server may also provide information about WINS servers 
+("NetBIOS name â servers") present on the network. This requires a change
+to your smb.conf file so that DHCP-provided WINS settings will automatically
+be read from /etc/samba/dhcp.conf.
+
+The dhcp3-client package must be installed to take advantage of this feature.
+
+Modify smb.conf to use WINS settings from DHCP?</code>
+
+Odgovorite sa **NO**.
+
+=====Privatni korisnički folderi=====
+
+Editirajte konfiguracijsku datoteku **/etc/samba/smb.conf**:
+
+  nano /etc/samba/smb.conf
+
+Otkomentirajte liniju **security = user** kako bi samo korisnici koji imaju korisnički račun na serveru mogli pristupiti share-u.
+
+Potražite dio koji počinje sa **[homes]**. Ispod njega se nalazi linija **writable = no** koju treba promijeniti u **writable = yes** kako bi korisnici imali write privilegije u svom direktoriju.
+
+Nakon podešavana vrijeme je za restart Samba servisa:
+
+  invoke-rc.d samba restart
+
+Prilikom instalacije Debiana sam osim root korisnika morao kreirati još jednog korisnika, u mom slučaju taj se korisnik zove **gog**. Kako bi on imao dozvolu pristupa svom korisničkom direktoriju moramo mu dodati grupu **users**.
+
+  usermod -a -G users gog
+
+Korisnike koji još uvijek ne postoje na sistemu treba kreirati te dodati ih u grupu users:
+
+  useradd koriscnicko_ime -m -G users
+
+Nakon što smo kreirali sve korisnike, potrebno im je dodijeliti lozinke za pristup share-u.
+
+  smbpasswd -a korisnicko_ime
+
+Korisnik svom share-u pristupa sa Start->Run... \\ip-adresa-servera\ [enter]. Nakon čega mora unijeti svoje korisničko ime i lozinku koju smo mu dodijelili pomoću naredbe **smbpasswd**. Nakon autentifikacije vidjet će svoj folder, sve što tamo snimi nalazi se na server u **/home/korisnicko_ime/**.
+
+=====Zajednički folder=====
+
+Ideja je kreirati zajednički folder u koji će svi korisnici koji imaju korisnički računa na serveru moći pisati i brisati. Neka se folder u ovom primjeru zove **dokumenti**, a pokazivat će na **/home/dokumenti/**.
+
+  mkdir /home/dokumenti
+
+Grupa koja je vlasnik direktorija zvat će se **users**, a privilegije pisanja u njega će imati svi korisnici koji pripadaju grupi **users**.
+
+  chown root:users /home/dokumenti/
+  chmod g=rwx /home/dokumenti/
+
+Editirajmo ponovo **/etc/samba/smb.conf**:
+
+  nano /etc/samba/smb.conf
+
+i dodajmo na kraj:
+
+<code>[[Dokumenti]]
+        comment = Zajednicki dokumenti
+        path = /home/dokumenti
+        valid users = @users
+        force group = users
+        create mask = 0660
+        directory mask = 0771
+        writable = yes</code>
+
+I za kraj nam ostaje samo još jednom resetirati Sambu:
+
+  invoke-rc.d samba restart
+
+Svaki korisnik koji se spoji na Windows share imat će pristup svom korisničkom folderu (ostali korisnici ne vide tuđe korisničke direktorije) i zajedničkom folderu imena **Dokumenti**.
