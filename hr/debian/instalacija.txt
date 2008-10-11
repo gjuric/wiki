@@ -1,0 +1,17 @@
+====== Instalacija Debiana ======
+
+Na http://www.debian.org/distrib/netinst skinite Small CD (recimo ovaj od 180 (možete i od 40MB nije toliko bitno). Prilikom skidanja potrebno je odabrati arhitekturu, u vašem slučaju to je vjerojatno i386.
+
+Skinuti .iso image snimite na CD i pokrenite stroj sa dotičnog CD-a.
+
+Nakon što se prikaže prozor za instalaciju dovoljno je upisati "install" i stisnuti enter. Ukoliko imate DHCP uključen na mreži upišite "install netcfg/disable_dhcp=true" kako instalacija ne bi pokupila postavke od DHCP servera tako da možete upisati statičku IP adresu i ostale podatke (serveri bi trebali imati statičku IP adresu, a i ne ovisite o radu DHCP servera).
+
+Prilikom instalacije bit će vam postavljeno više jednostavnih pitanja, evo nekih koje se sjećam:
+
+  *  Jezik instalacije - odaberite Engleski
+  *  Zemlja - Croatia
+  *  Keymap - Croatian
+  *  Particioniranje diska - particionirajte čitav disk, instalacija će vam sama ponuditi postavke
+  *  Software selection - obavezno isključite sve (i Standard system, apsolutno sve), naknadno ćemo instalirati sve programe koji su nam potrebni
+  *  Mirror server - obavezno unesite mirror server, ja obično koristim Germany -> ftp2.de.debian.org jer je meni brži od ovog hrvatskog
+Morat ćete još unijeti i lozinku za root korisnika te kreirati jedan korisnički račun. Na kraju će vas instalacija zamoliti da uklonite CD i potvrdite resetiranje računala.
