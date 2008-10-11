@@ -1,5 +1,19 @@
 ====== Debian ======
 
+  *[[hr:Debian:Instalacija Instalacija Debiana]]
+  *[[hr:Debian:Backup Backup servera]]
+  *[[hr:Debian:NTP Sinkronizacija vremena (NTP)]]
+  *[[hr:Debian:DNS DNS (BIND 9)]]
+  *[[hr:Debian:LAMP LAMP]]
+  *[[hr:Debian:Verlihub DC hub (Verlihub)]]
+  *[[hr:Debian:Jabber Jabber (Openfire)]]
+  *[[hr:Debian:Teamspeak2 TeamSpeak2]]
+  *[[hr:Debian:Ventrilo Ventrilo]]
+  *[[hr:Debian:VoIP VoIP (OpenSER)]]
+  *[[hr:Debian:WindowsFileSharing Windows File Sharing]] (Samba)
+  *[[hr:Debian:DcFileSharing DC file sharing]] (microdc2)
+  *[[hr:Debian:DynDNS DynDNS]]
+
 ===== Instalacija Debiana =====
 
 Na http://www.debian.org/distrib/netinst skinite Small CD (recimo ovaj od 180 (možete i od 40MB nije toliko bitno). Prilikom skidanja potrebno je odabrati arhitekturu, u vašem slučaju to je vjerojatno i386.
@@ -518,6 +532,7 @@ Copy-paste-ajte slijedeće:
 
 case "$1" in
   start)
+
         echo -n "Starting verlihub"
         start-stop-daemon  --start --quiet --exec /usr/local/bin/vh_runhub
         echo "."
@@ -536,6 +551,7 @@ case "$1" in
 
         sleep 3
         start-stop-daemon  --start --quiet --exec /usr/local/bin/vh_runhub
+
 
 
 
