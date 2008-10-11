@@ -1,0 +1,25 @@
+======TeamSpeak2======
+
+TeamSpeak2 je pandan Ventrilu. Servis koji omogućuje glasvonu komunikaciju između više korisnika. Najšešće se koristi prilikom igranja. Službeni paket TeamSpeak2 servera će se pojaviti tek u novoj verziji Debian (Sid), međutim autor je na zamolbu zapakirao i verziju kompatibilnu s Etch-om koji mi koristimo.
+
+Skinimo TeamSpeak2 server s interneta:
+
+  wget http://www.webote.com/debian/teamspeak-server_2.0.23.19-1_i386.deb
+
+Da bi instalirali paket moramo upisati:
+
+  dpkg -i teamspeak-server_2.0.23.19-1_i386.deb
+
+Nakon instalacije preostaje nam još samo pokrenuti server
+
+  invoke-rc.d teamspeak-server start
+
+Admin sučelje dostupno je iz preglednika na adresi:
+
+  http://ip-adresa:14534
+
+Korisničko ime i lozinku za admin i superadmin accout možete pronaći u log datoteci od TeamSpeaka koja je smeštena u /var/log/teamspeak.log
+
+  grunf:/var/log# cat /var/log/teamspeak-server.log | grep password
+  17-02-08 19:38:33,WARNING,Info,SERVER,  admin account info: username: admin password: XXXXXX
+  17-02-08 19:38:33,WARNING,Info,SERVER,  superadmin account info: username: superadmin password: YYYYYY
