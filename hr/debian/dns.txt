@@ -1,0 +1,195 @@
+====== DNS (BIND 9) ======
+
+Za DNS server ćemo instalirati BIND 9, najrašireniji DNS server na internetu. Nakon što ga podesimo DNS server će resolvati domenu savica.net, forwardirati zajhtjeve za ostalim internim domenama prema nadležnim DNS poslužiteljima, te resolvati domene na internetu.
+
+  apt-get install bind9 dnsutils
+
+===== Caching name server ====
+
+DNS server ćemo podesiti tako da zna resolvati sve domene na internetu, a resolvane zapise ujedno čuva i u svom cache-u. Otvorite **/etc/bind/named.conf** i provjerite da unutra imate ovaj dio:
+
+  // prime the server with knowledge of the root servers
+  zone "." {
+          type hint;
+          file "/etc/bind/db.root";
+  };
+
+Time smo DNS serveru dali do znanja da za sve domene pogleda popis root servera koji se nalazi u datoteci **/etc/bind/db.root** i pošalje jednom od njih upit.
+
+Proverite još samo da na kraju imate liniju koja include-a naše lokalne opcije na kraju datoteke
+
+  include "/etc/bind/named.conf.local";
+
+Provjerimo radi li naš DNS server:
+
+<code>grunf:~# nslookup google.com
+Server:         127.0.0.1
+Address:        127.0.0.1#53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 64.233.167.99
+Name:   google.com
+Address: 64.233.187.99
+Name:   google.com
+Address: 72.14.207.99</code>
+
+===== State Of Authority =====
+
+DNS server će biti glavni DNS server za domenu savica.net. Otvorimo datoteku **/etc/bind/named.conf.local**
+
+  nano /etc/bind/named.conf.local
+
+i dodajmo slijedeće:
+
+  zone "savica.net" {
+          type master;
+          file "/etc/bind/zones/savica.net";
+  };
+  zone "0.29.10.in-addr.arpa" {
+          type master;
+          file "/etc/bind/zones/10.29.0.rev";
+  };
+
+
+Kreirajmo prvo direktorij /etc/bind/zones
+
+  mkdir /etc/bind/zones
+
+I kreirajmo u njemu datoteku **savica.net**:
+
+  nano /etc/bind/zones/savica.net
+
+Upišimo odmah i par DNS zapisa:
+
+<code>$ORIGIN .
+$TTL 300      ; 5 minutes
+savica.net              IN SOA  ns1.savica.net. gog.savica.net. (
+                                20080213   ; serial
+                                300        ; refresh (5 minutes)
+                                600        ; retry (10 minutes)
+                                1209600    ; expire (2 weeks)
+                                10800      ; minimum (3 hours)
+                                )
+                        NS      ns1.savica.net.
+                        NS      ns2.savica.net.
+$ORIGIN savica.net.
+grunf                   A       10.29.0.2
+grunf2                  A       10.29.3.1
+
+ns1                     CNAME   grunf
+dc                      CNAME   grunf
+jabber                  CNAME   grunf
+voip                    CNAME   grunf
+ntp                     CNAME   grunf
+ts                      CNAME   grunf
+teamspeak               CNAME   grunf
+ventrilo                CNAME   grunf
+ns2                     CNAME   grunf2</code>
+
+Kreirajmo zatim **10.29.0.rev** datoteku:
+
+  nano /etc/bind/zones/10.29.0.rev
+
+I upišimo u nju PTR record barem za računalo koje je i DNS server (u ovom slučaju 10.29.0.2):
+
+<code>
+$ORIGIN .
+$TTL 300      ; 5 minutes
+0.29.10.in-addr.arpa    IN SOA  ns1.savica.net. hostmaster.savica.net. (
+                                200802141  ; serial
+                                7200       ; refresh (2 hours)
+                                900        ; retry (15 minutes)
+                                1209600    ; expire (2 weeks)
+                                10800      ; minimum (3 hours)
+                                )
+                        NS      ns1.savica.net.
+                        NS      ns2.savica.net.
+$ORIGIN 0.29.10.in-addr.arpa.
+2                       PTR     grunf.savica.net.</code>
+
+
+Dodajmo u /etc/resolv.conf i localhost (127.0.0.1), moja datoteka sada izgleda ovako:
+
+  search savica.net
+  nameserver 127.0.0.1
+  nameserver 10.29.3.1
+
+**10.29.3.1** je sekundarni DNS server koji ćemo podesiti kasnije. Redoslijed ovih nameservera odlučuje o redoslijedu kako će server resolvati domene, s obzirom da smo na njemu podesili DNS server želimo da prvo "sebe pita" za svaku domenu. Ukoliko se slučajno DNS servis ugasi, upit će biti prosljeđen sekundardnom serveru (10.29.3.1).
+
+Reloadajmo BIND i provjerimo radi li DNS server:
+
+  invoke-rc.d bind9 reload
+
+<code>grunf:~# nslookup ns1.savica.net
+Server:         127.0.0.1
+Address:        127.0.0.1#53
+
+ns1.savica.net  canonical name = grunf.savica.net.
+Name:   grunf.savica.net
+Address: 10.29.0.2</code>
+
+
+===== Forward zahtijeva =====
+
+Kreirajmo prvo forward.conf datoteku, u njoj su smešteni dns-serveri na koje prosljeđujemo upite za domenama drugih mreža.
+
+  nano /etc/bind/forward.conf
+
+U nju unesite sve prijateljske mreže s kojima ste spojeni i čije DNS-ove znate:
+
+<code>zone "wifihr." {
+        type forward;
+        forwarders { 10.14.16.1 ; 10.14.7.1 ; };
+};
+zone "14.10.in-addr.arpa" {
+        type forward;
+        forwarders { 10.14.16.1 ; 10.14.7.1 ; };
+};
+
+zone "dw." {
+        type forward;
+        forwarders { 10.29.1.251 ; };
+};
+
+zone "vb-vgw." {
+        type forward;
+        forwarders { 10.60.0.100 ; };
+};
+
+zone "vgw." {
+        type forward;
+        forwarders { 10.20.1.2 ; 10.20.3.1 ; };
+};
+
+zone "zgw." {
+        type forward;
+        forwarders { 10.5.142.32 ; 10.5.131.33 ; };
+};
+
+zone "znet." {
+        type forward;
+        forwarders { 10.168.4.2 ; 10.168.52.2 ; };
+};
+
+zone "vrw." {
+        type forward;
+        forwarders { 10.125.0.51 ; 10.14.7.1 ; };
+};
+</code>
+
+Na kraju datoteke **/etc/bind/named.conf.local** dadajte liniju:
+
+  include "/etc/bind/forward.conf";
+
+Reloadajmo BIND još jednom i provjerimo možemo li resolvati neku od forwardiranih domena, u mom slučaju je to .wifihr
+
+  invoke-rc.d bind9 reload
+
+<code>grunf:~# nslookup jabber.wifihr
+Server:         127.0.0.1
+Address:        127.0.0.1#53
+
+Non-authoritative answer:
+Name:   jabber.wifihr
+Address: 10.14.16.2</code>
