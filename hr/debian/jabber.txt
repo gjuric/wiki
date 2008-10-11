@@ -1,0 +1,129 @@
+======Jabber (Openfire)======
+
+=====Instalacija Jave=====
+Openfire Jabber server je napisan u Javi, stoga ćemo prvo morati instalirati Javu. Da bi to mogli napraviti na Debianu, potrebno je dodati non-free repozitorije. Editirajte /etc/apt/sources.lst
+
+  nano /etc/apt/sources.list
+
+Na kraju linija:
+
+  deb http://ftp2.de.debian.org/debian/ etch main
+  deb-src http://ftp2.de.debian.org/debian/ etch main
+
+Treba dodati "non-free" tako da one izledaju ovako:
+
+  deb http://ftp2.de.debian.org/debian/ etch main non-free
+  deb-src http://ftp2.de.debian.org/debian/ etch main non-free
+
+Ponovo pokrenite:
+
+  apt-get update
+
+Instalirajte Sun Java Runtime Environment:
+
+  apt-get install sun-java5-jre
+
+=====Podešavanje MySQL-a=====
+
+Iako Openfire može raditi s tekstualnom datotekom, mi ćemo ga podesiti tako da podatke čuva u bazi podataka.
+
+Kreirajmo bazu koja se zove jabber
+
+  mysqladmin -u root -p create jabber
+
+Morat ćete unijet lozinku root korisnika MySQL-a, koja ne mora biti nužno jednaka lozinci root korisnika na računal. Dotičnu lozinku ste postavili prilikom instalacije MySQL-a.
+
+Kreirajmo sada korisnika koji će imati sva prava nad bazom "jabber". Openfire će se na bazu spajati kao dotični korisnik. Spojimo se prvo na MySQL:
+
+  mysql -u root -p
+
+Nakon što unesete lozinku, trebali bi vidjeti prompt "mysql>", unesite:
+
+  GRANT ALL PRIVILEGES ON jabber.* TO 'jabber'@'localhost' IDENTIFIED BY 'jabber-lozinka';
+
+Ukoliko je naredba usješno izvedena trebali bi vidjeti: "Query OK, 0 rows affected". Izađite iz MySQL-a tako da upišete "exit". "jabber-lozinka" je proizvoljna lozinka koju će Openfire koristiti za spajanje na bazu.
+
+=====Instalacija Openfire-a=====
+
+Službene upute za instalaciju Openfire-a na Linuxu nalaze se na http://www.igniterealtime.org/builds/openfire/docs/latest/documentation/install-guide.html
+
+Skinite zadnju inačicu Openfire servera sa njihovih stranicu, trenutno je to verzija 3.4.5.
+
+  wget http://www.igniterealtime.org/downloadServlet?filename=openfire/openfire_3_4_5.tar.gz
+
+Raspakirajte arhivu:
+
+  tar -xvzzf downloadServlet\?filename\=openfire%2Fopenfire_3_4_5.tar.gz
+
+Preselite novonastali direktorij openfire/ u direktorij /opt
+
+  mv openfire/ /opt
+
+Pokrenimo Openfire:
+
+  /opt/openfire/bin/openfire start
+
+Nakon pokretanja Openfire-a potrebno je spojiti se s internet preglednikom na adresu http://ip-adresa-vaseg-servera:9090 . Ukoliko se ne možete spojiti iz prve, sačekajte malo, Java je spora dok se ne podigne prvi puta.
+
+Ostatak instalacije odrađuje se iz internet preglednika:
+
+  *  Jezik odaberite engleski
+  *  Unesite domenu: npr. jabber.savica.net, jabber.wifihr, jabber.zutaferka.wifihr (ovisno o tome na kojoj domeni se nalazi server)
+  *  Portove možete ostaviti standardne
+  *  Za bazu odaberite:  Standard Database Connection
+  *  Iz dropdown-a odaberite MySQL
+  *  Database URL : jdbc : mysql : / /localhost : 3306 / jabber
+  *  Username : jabber
+  *  Password : jabber-password (ili koju lozinku ste već dodijelili korisniku jabber u MySQL-u)
+  *  Profile setting : Default (osim ukoliko ne želite koristiti LDAP, no da to želite, ne bi niti čitali ove upute :) )
+  *  Podesite e-mail i lozinku administratora
+
+Nakon što ste završili sa instalacijom možete su ulogirati u Admin konzolu s korisničkim imenom **admin** i lozinkom koju ste maloprije podesili. I to je sve.
+
+Ukoliko ste primijetili da ne možete ništa upisivati u svoj terminal, to je zato što server nismo pokrenuli u pozadini. Pritisnite Ctrl + C čime ćete ujedno i ugasiti server.
+
+=====Automatsko pokretanje=====
+
+Ostaje nam još samo podesiti automatsko podizanje Jabber servera prilikom bootanja servera. Openfire već dolazi sa init skriptom, samo ju je potrebno podesit. Prekopirajte ju u /etc/init.d/ direktorij. Skripta se zove openfired, no mi ćemo ju nazvati jabber:
+
+  cp /opt/openfire/bin/extra/openfired /etc/init.d/jabber
+
+Učinimo ju izvršnom:
+
+  chmod +x /etc/init.d/jabber
+
+I dodajmo ju u defaultni runlevel:
+
+  update-rc.d jabber defaults
+
+Skripta očekuje da Openfire pokreće korisnik "jive" koji trenutno ne postoji na sistemu. Ajmo ga prvo kreirati i dodijelit mu home direktorij /opt/openfire .
+
+  adduser --home /opt/openfire --disabled-login --disabled-password --no-create-home jive
+
+Dobit ćemo upozorenje da direktorij i datoteke u direktoriju /opt/openfire ne pripadaju korisniku jive, pa ajmo to popraviti:
+
+  chown jive:jive /opt/openfire/ -R
+
+Skripta ima jednu grešku u sebi, stoga editirajmo /etc/init.d/jabber
+ 
+  nano /etc/init.d/jabber
+
+liniju 53:
+
+          CMD="./openfire.sh $1"
+
+treba zamijeniti sa 
+
+          CMD="./openfire $1"
+
+Osim što će se Openfire sada automatski paliti kada i server, njime možete upravljati i slijedećim naredbama:
+
+  /etc/init.d/jabber start
+  /etc/init.d/jabber stop
+
+Što je ekvivalentno tome da ste napisali:
+
+  invoke-rc.d jabber start
+  invoke-rc.d jabber stop
+
+Najbrži način je napisati "inv" pa stisnuti <tab> autocomplete će odraditi ostatak.
