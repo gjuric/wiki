@@ -1,0 +1,66 @@
+======DC file sharing (microdc2)======
+
+Ukoliko želite svoj server iskoristiti i kao file server koji će biti spojen na DC hub, a ne želite instaliravati grafičko sučelje potreban vam je **[[http://corsair626.no-ip.org/microdc/|microdc2]]**. Microdc2 je fork microdc-a koji se više ne razvija, a podržava i TTH. Nedostatak podrške za TTH je razlog zašto ne možemo koristiti **dctc** koji se nalazi u Debianovom repozitoriju. Još jedan od klijenata za spajanje na DC hub iz konzole je nanodc, no njega nisam uspio upogoniti.
+
+Skinimo i raspakirajmo arhivu:
+
+  wget http://corsair626.no-ip.org/microdc/microdc2-0.15.6.tar.gz
+  tar -xvzzf microdc2-0.15.6.tar.gz
+  cd microdc2-0.15.6
+
+Prije kompajliranja potrebno je instalirati i dvije biblioteke:
+
+  apt-get install libxml2-dev libncurses5-dev
+
+Skompalirajmo microdc2:
+
+  ./configure
+  make
+  make install
+
+Ukoliko ste negdje zapeli prilikom kompajliranja probajte instalirati i paket **libreadline5-dev** i pokušajte ponovo.
+
+Sada možemo pokrenuti microdc2:
+
+  microdc2
+
+Nakon što se microdc2 upali upišite **share /putanja-do-shareanog-direktorija** i sačekajte dok microdc2 ne završi sa hashiranjem vaših podataka. To može i potrajati, a što se trenutno dešava možete provjeriti upisivanjem naredbe **status** ili možete baciti oko na zauzeće procesora uz pomoć naredbe **top** (ali u drugom prozoru, ne u prozoru u kojem vam je pokrenut microdc2). Kada hashiranje završi izađite iz programa naredbom **exit**.
+
+Sad ćemo kreirati konfiguracijsku datoteku, ukoliko ste spojeni kako **root**:
+
+  nano /root/.microdc2/config
+
+U nju unesite:
+
+  set nick vas-nick
+  set description [[WiFiHR-|10.14.X.X]]
+  set active on
+  set listenaddr ip-adresa-vaseg-servera
+  set auto_reconnect on
+  set speed LAN(T3)
+  set slots 20
+  set email vasa-email-adresa
+  connect adresa-huba-na-koji-se-spajate
+  set logfile /var/log/microdc2
+
+I konačno se možete spojiti na hub tako da pokrene ponovo microdc2 nakon čega bi se on automatski trebao spojiti.
+
+Nažalost, microdc2 se ne možete vrtiti kao daemon, niti se pokrenuti u pozadini. Tako da ćemo se poslužiti programom **screen**.
+
+  apt-get install screen
+
+  screen
+  microdc2
+
+Zatim pritisnite <Ctrl>+A i zatim **d**, što će //detachati// prozor u kojem je pokrenut microdc2. Ukoliko se želite vratiti unesite **screen -ls**:
+
+  grunf:~# screen -ls
+  There is a screen on:
+         32668.pts-1.grunf      (Detached)
+  1 Socket in /var/run/screen/S-root.
+
+Kao što vidite postoji //prozor// **32668.pts-1.grunf**, da bi se na njega spojili unesimo:
+
+  screen -r 32668.pts-1.grunf
+
+Pročitajte više o naredbi [[http://www.rackaid.com/resources/linux-tutorials/general-tutorials/linux-screen.cfm|screen]]
