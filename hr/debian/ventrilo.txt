@@ -1,0 +1,70 @@
+======Ventrilo======
+
+Verzija Ventrila koju ćemo instlirati je 2.1.2 jer novije verzije imaju ograničenja na broj korisnika koji se na njih može spojiti. Potražite datoteku ventrilo_srv-2.1.2-Linux-i386.tar.gz na internetu i prebacite ju na server. Zgodan program za prebacivanje datoteka na server je [[http://winscp.net/|WinSCP]].
+
+Nakon što ste prebacili datoteku kreirajte direktorij u u kojem želite snimiti Ventrilo, npr. /home/ventrilo i rapskirajte datoteku:
+
+  mkdir /opt/ventrilo 
+  adduser --home /opt/ventrilo --disabled-login --disabled-password --no-create-home ventrilo
+  mv ventrilo_srv-2.1.2-Linux-i386.tar.gz /opt/ventrilo/
+  cd /opt/ventrilo
+  tar -xvzzf ventrilo_srv-2.1.2-Linux-i386.tar.gz
+  rm ventrilo_srv-2.1.2-Linux-i386.tar.gz
+  chown ventrilo:ventrilo -R /opt/ventrilo
+
+Nakon raspakiravanja vrijeme je da podesite server editirajući datoteku ventrilo_srv.ini
+
+  nano /opt/ventrilo/ventrilo_srv.ini
+
+Podesite ime servera i admin password.
+
+
+
+=====Automatsko pokretanje=====
+
+Kreirajmo init skriptu:
+
+  nano /etc/init.d/ventrilo
+
+<code bash>#! /bin/sh
+VENPATH=/opt/ventrilo
+VENBIN=$VENPATH/ventrilo_srv
+test -x $DAEMON || exit 0
+case "$1" in
+start)
+echo "Starting Ventrilo Server"
+su ventrilo -c "$VENBIN -f$VENPATH/ventrilo_srv -d"
+echo -n "Setting priority: "
+renice -5 -u ventrilo
+echo "Done."
+;;
+stop)
+echo -n "Stopping all Ventrilo Servers"
+killall ventrilo_srv
+echo ". Done."
+;;
+reload)
+echo "Not implemented."
+;;
+force-reload|restart)
+sh $0 stop
+sleep 5
+sh $0 start
+;;
+  * )
+echo "Usage: /etc/init.d/ventrilo {start|stop|restart|force-reload|reload}"
+exit 1
+;;
+esac
+exit 0</code>
+
+  chmod +x /etc/init.d/ventrilo
+
+  update-rc.d ventrilo defaults
+
+=====Chroot jail=====
+
+Upute za pokretanje Ventrila u chroot okruženju potražite na:
+
+  *  http://pelme.se/%7Eandreas/code/ventrilo-chroot/
+  *  http://www.howtoforge.com/ventrilo_voice_communication_server_ubuntu_feisty_amd64
