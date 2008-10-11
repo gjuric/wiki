@@ -1,0 +1,51 @@
+======VoIP (OpenSER)======
+
+OpenSER je SIP (Session Initiation Protocol) proxy server. Ukratko to znači da pomoću njega možete uspostavljati pozive koristeći softver koji se zna služiti SIP-om, kao npr. Eyebeam - http://www.counterpath.com/eyebeam.html .
+
+  apt-get install openser
+
+Nakon istalacije editirajte datoteku **/etc/default/openser**:
+
+  nano /etc/default/openser
+
+Promijenite liniju
+
+  RUN_OPENSER=no
+
+u
+
+  RUN_OPENSER=yes
+
+Editirajte datoteku /etc/openser/openser.cfg i dodajte liniju
+
+  alias=voip.savica.net
+
+Domenu naravno zamijenite svojom. Zadnji korak je i da upalimo OpenSER:
+
+  invoke-rc.d openser start
+
+Trebali bi vidjeti ovako nešto:
+
+<code>grunf:~# invoke-rc.d openser start
+Starting openser: openserListening on
+             udp: 127.0.0.1 [[127.0.0.1]]:5060
+             udp: 10.29.5.80 [[10.29.5.80]]:5060
+             tcp: 127.0.0.1 [[127.0.0.1]]:5060
+             tcp: 10.29.5.80 [[10.29.5.80]]:5060
+Aliases:
+             tcp: grunf.savica.net:5060
+             tcp: grunf.savica.net.savica.net:5060
+             tcp: localhost:5060
+             udp: grunf.savica.net:5060
+             udp: grunf.savica.net.savica.net:5060
+             udp: localhost:5060
+             *: voip.savica.net:*</code>
+
+
+Pomoću utility-a **openserctl** možete vidjeti trenutno spojene korisnike:
+
+  grunf:~# openserctl online
+  WARINIG: no database engine found - tried //
+  'gog'
+
+Warning možete slobodno zanemariti, on se pojavljuje samo zato što OpenSER ima i MySQL modul koji omogućuje pohranjivanje korisnika u bazu, njihovu autorizaciju, registriranje i sl.
