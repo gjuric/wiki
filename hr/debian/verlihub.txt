@@ -1,0 +1,252 @@
+
+======DC hub (Verlihub)======
+
+=====Instalacija potrebnih biblioteka i programa=====
+Ukoliko koristite Ubuntu okušajte sreću da malo niše opisanim postupkon, no on na Debianu ne radi, stoga ćemo morati ručno. Verlihub zahtijeva GeoIP, Libpcre i MySQL, s obzirom da smo MySQL već instalirali preostaje nam još:
+
+  apt-get install libgeoip1 libgeoip-dev
+  apt-get install libpcre3 libpcre3-dev
+
+Kako bi mogli kompajlirati programe na Debianu potreban nam je naravno kompajler :) ali i još par utility-a, pa ajmo ih instalirati:
+
+  apt-get install build-essential
+
+=====Kompajliranje=====
+
+Skinimo Verlihub:
+
+  wget http://downloads.sourceforge.net/verlihub/verlihub-0.9.8d-RC2.tar.gz
+
+Raspakirajmo arhivu:
+
+  tar -xvzzf verlihub-0.9.8d-RC2.tar.gz
+
+Uđimo u novokreirani direktorij:
+
+  cd verlihub
+
+Komapajliranje se obično svodi na ./configure make make install, pa tako i ovdje:
+
+Unesite:
+
+  ./configure
+
+Nakon nekog vremena trebala bi vas dočekati poruka: "Configure has completed successfully........"
+
+Zatim unesite:
+
+  make
+
+Sada slijedi još malo dosadnog čekanja koje sam ja iskoristio za pisane ovog tutoriala :) Koliko ćete čekati ovisi o brzini servera.
+
+Nakon kompajliranja potrebno je verlihub i instalirati:
+
+  make install
+
+=====Podešavanje MySQL-a=====
+
+Prije nego što pokrenemo konfiguraciju Verlihub-a potrebno je prvo kreirati bazu podataka koju će Verlihub koristiti:
+
+  mysqladmin -u root -p create verlihub
+
+Morat ćete unijet lozinku root korisnika MySQL-a, koja ne mora biti nužno jednaka lozinci root korisnika na računal. Dotičnu lozinku ste postavili prilikom instalacije MySQL-a.
+
+Kreirajmo sada korisnika koji će imati sva prava nad bazom "verlihub". Verlihub će se na bazu spajati kao dotični korisnik. Spojimo se prvo na MySQL:
+
+  mysql -u root -p
+
+Nakon što unesete lozinku, trebali bi vidjeti prompt "**mysql>**", unesite:
+
+  GRANT ALL PRIVILEGES ON verlihub.* TO 'verlihub'@'localhost' IDENTIFIED BY 'verlihub-lozinka';
+
+Ukoliko je naredba usješno izvedena trebali bi vidjeti: "**Query OK, 0 rows affected**". Izađite iz MySQL-a tako da upišete "**exit**". "verlihub-lozinka" je proizvoljna lozinka koju će Verlihub koristiti za spajanje na bazu.
+
+=====Instalacijska skripta=====
+
+Nakon što smo pripremili bazu podataka vrijeme je za pokretanje Verlihubove instalacijske skripte. Potražimo prvo gdje se Verlihub-ova instalacijska skripta smjestila:
+
+  updatedb
+  locate vh_install | grep bin
+
+**/usr/local/bin** je dakle mjesto gdje se nalazi skripta, pa pokrenimo ju:
+
+  /usr/local/bin/vh_install
+
+Popunite tražene podatke:
+
+<code>
+grunf:~/verlihub# /usr/local/bin/vh_install
+--------------------------------
+Your name ? (root)
+
+Hello root,
+let's start with configuration of database access..
+
+--------------------------------
+mysql database for verlihub will be called? (verlihub)
+mysql user to access verlihub gonna be? (verlihub)
+password to access verlihub be? (1202872483) verlihub-lozinka
+mysql server will run where? (localhost)
+--------------------------------
+user     = verlihub
+password = verlihub-lozinka
+host     = localhost
+database = verlihub
+--------------------------------
+This database account exists
+--------------------------------
+Is this info correct ? (Y/N)Y
+
+--------------------------------
+
+root, you need to choos a place for the configuration files
+--------------------------------
+The order of folder that verlihub is looking for is following:
+
+1 - variable $VERLIHUB_CFG          - -inexisting-
+2 - ./.verlihub                      - /root/verlihub/.verlihub -inexisting-
+3 - /root/.verlihub        - /root/.verlihub -inexisting-
+4 - /usr/local/etc/verlihub   - /usr/local/etc/verlihub -inexisting-
+5 - /etc/verlihub                    - /etc/verlihub -inexisting-
+if two or more of these exist, lower number has priority
+--------------------------------
+
+--------------------------------
+what is will be the configuration folder ? (/etc/verlihub)
+The config folder /etc/verlihub does not exist and would be created
+--------------------------------
+Do you want to continue with these settings (if not then select another folder) ? (Y/N)Y
+--------------------------------
+Written: /etc/verlihub/dbconfig
+
+--------------------------------
+
+Wait few seconds..
+</code>
+
+Prvi put kada sam pokrenuo instalacijsku skriptu ona se nakon ovog koraka zaglavila, ukoliko vam se to slučajno desi samo ju prekinite sa Ctrl+C i pokrenite ispočetka.
+
+Ostatala instalacijska pitanja su trivijalna, potrebno je podesiti korisničko ime i lozinke za SuperUsera, port na kojem će se DC hub vrtiti (odaberite 411 jer njega DC klijenti koriste po defaultu), DNS zapis stroja na kojem se hub nalazi, npr. dc.savica.net, dc.wifihr, ...
+
+=====Pokretanje=====
+
+Čestitamo upravo ste instalirali Verlihub. Pokrenimo ga da vidimo da li radi. Za pokretanje Verlihub-a postoji skripta imena vh_runhub koja služi za njegovo pokretanje:
+
+  /usr/local/bib/vh_runhub
+
+Pokušajte se spojiti sa DC klijent-om da provjerite da li sve radi. Spojite se kao SuperUser ([[SU]]root se zove ukoliko ste odabrali defaultne postavke prilikom instalacije) i možete si odmah registrirati svoje korisničke ime i dodijeliti željenu klasu.
+
+
+
+=====Automatsko pokretanje=====
+
+Kao i sve ostale servise, vjerojatno vam je želja da se Verlihub pokreće prilikom paljenja servera, da bi to postigli potrebno je kreirati jednostavnu skriptu: **/etc/init.d/verlihub**. Na Debianu sve sve init skripte nalaze u direktoriju /etc/init.d
+
+  nano /etc/init.d/verlihub
+
+Copy-paste-ajte slijedeće:
+
+<code bash>
+# !/bin/sh
+#  RUNAS= verlihub%%%
+#  LOGFILE= /var/log/verlihub
+
+case "$1" in
+  start)
+
+        echo -n "Starting verlihub"
+        start-stop-daemon  --start --quiet --exec /usr/local/bin/vh_runhub
+        echo "."
+        ;;
+  stop)
+        echo -n "Stopping verlihub"
+        start-stop-daemon --stop --quiet --oknodo --pidfile /etc/verlihub/pid
+        echo "."
+        ;;
+
+
+
+  restart)
+        echo -n "Restarting verlihub"
+        start-stop-daemon --stop --quiet --oknodo --pidfile /etc/verlihub/pid
+
+        sleep 3
+        start-stop-daemon  --start --quiet --exec /usr/local/bin/vh_runhub
+
+
+
+
+
+        echo "."
+        ;;
+
+  *)
+        echo "Usage: /etc/init.d/verlihub {start|stop|restart}"
+
+        exit 1
+esac
+
+exit 0
+</code>
+
+Skriptu je potrebno učiniti izvršnom, stoga:
+
+  chmod +x /etc/init.d/verlihub
+
+I još je samo preostalo dodati skriptu u odgovarajući runlevel, na debianu je to najjednostavnije napraviti ovako:
+
+  update-rc.d verlihub defaults
+
+Osim što će se Verlihub sada automatski paliti kada i server, njime možete upravljati i slijedećim naredbama:
+
+  /etc/init.d/velihub start
+  /etc/init.d/velihub stop
+
+Što je ekvivalentno tome da ste napisali:
+
+  invoke-rc.d verlihub start
+  invoke-rc.d verlihub stop
+
+Najbrži način je napisati "inv" pa stisnuti <tab> autocomplete će odraditi ostatak.
+
+=====Konfiguracija=====
+
+Spojite se na hub sa korisničkim imenom [[SU]]root (ili kako ste već nazvali svog SuperUsera) i registrirajte sebe kao admina tako da u main chat upišete:
+
+  !regnew vaš-nick 10
+
+Nakon toga se možete spojiti sa svojim nadimkom, podesiti si lozinku i podesiti ostale parametre Verlihub-a. Upisivanjem **!gc** kao admin u main chat dobit ćete popis svih konfiguracijskih naredbi, a njihova značenja možete potražiti u [[http://www.verlihub-project.org/doku.php?id=manual|Verlihubovoj dokumentaciji]].
+
+Evo nekih koje ne bi bilo naodmet podesiti:
+
+  !set redir_host_max 0
+  !set redir_host0 adresa-vašeg-huba
+  !set send_user_info 0
+  !set int_search_pas 5
+  !set min_nick 2
+  !set int_search 5
+  !modtrigger +vh_donation -c11
+  !modtrigger +admin_reminder -c11
+  !modtrigger +updates -c11
+  !modtrigger +news -c11
+
+=====Ubuntu=====
+
+Ukoliko ste instalirali Ubuntu, dio o komapjliranju možete preskočiti (doduše nisam provjerio da li stvarno radi, na Debianu se buni zbog razlike u verzijama pojedinih biblioteka). No, da skratimo, otvorite datoteku **/etc/apt/sources.list**
+
+  nano /etc/apt/sources.list
+
+i dodajte na njen kraj:
+
+  deb http://www.verlihub-project.org/debian binary/ 
+  deb-src http://www.verlihub-project.org/debian source/ 
+
+Nakon što ju spremite, u prompt ponovo unesite:
+
+  apt-get update
+
+Sada kada je repozitori dodan Verlihub možete instalirati:
+
+  apt-get install verlihub 
+
+Dalje se snađite sami, ili bacite oko malo više, za dovršetak instalacijske procedure.
