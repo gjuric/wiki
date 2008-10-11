@@ -15,3 +15,39 @@ Prilikom instalacije bit će vam postavljeno više jednostavnih pitanja, evo nek
   *  Software selection - obavezno isključite sve (i Standard system, apsolutno sve), naknadno ćemo instalirati sve programe koji su nam potrebni
   *  Mirror server - obavezno unesite mirror server, ja obično koristim Germany -> ftp2.de.debian.org jer je meni brži od ovog hrvatskog
 Morat ćete još unijeti i lozinku za root korisnika te kreirati jedan korisnički račun. Na kraju će vas instalacija zamoliti da uklonite CD i potvrdite resetiranje računala.
+
+=====  Prvi boot ====
+
+Nakon što se server podigne ulogirajte se kao root korisnik sa lozinkom koju ste unijeli prilikom instalacije.
+
+Editirajte datoteku /etc/apt/sources.lst:
+
+  nano /etc/apt/sources.list
+
+Zakomentirajte liniju koja počinje s "deb cdrom: [ [Debian ..." upisivanjem znaka # na početku linije, spremite promjene (ctrl+X i potvrdite da želite spremiti datoteku pod istim imenom).
+
+Kada se vratite u prompt upišite:
+
+  apt-get update
+  apt-get upgrade
+
+Potvrdite da želite instalirati pakete koje će vam možda ponuditi. Prva naredba dohvaća najnovije verzije paketa u repozitoriju, a druga naredba upgrade-a sve pakete za koje postoji nova verzija.
+
+Vrijeme je za instalacije openssh servera koji će nam omogućiti spajanje na stroj putem SSH-a, usput ćemo instalirati i SSH kako bi mogli server koristiti za spajanje na druga računala.
+
+  apt-get install openssh-server ssh
+
+Nakon ovog koraka, nema više potrebe da prekucavate sve ove naredbe kada ih možete copy-pasteati :). Možete se sjesti za svoje računalo i pomoću [[http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html|Putty]]-a spojiti se na svoj novo-instalirani server. Korisničko ime (root), lozinku i IP adresu već znate.
+
+===== Početno podešavanje sata ====
+
+Podesimo prvo datum i vrijeme:
+
+  date -s 2008-02-13
+  date -s 01:06:00
+
+Zapišimo trenutno vrijeme u harderski sat:
+
+  hwclock --systohc
+
+Debian prilikom svakog gašenja računala zapisuje sistemski sat u hardverski. Naredba **date** ispisuje trenutni datumi vrijeme, te vremensku zonu. Ukoliko vremensku zonu niste dobro podesili prilikom instalacije možete ju promijeniti sa naredbom **tzconfig**.
