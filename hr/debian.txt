@@ -1,18 +1,18 @@
 ====== Debian ======
 
-  *[[hr:Debian:Instalacija Instalacija Debiana]]
-  *[[hr:Debian:Backup Backup servera]]
-  *[[hr:Debian:NTP Sinkronizacija vremena (NTP)]]
-  *[[hr:Debian:DNS DNS (BIND 9)]]
-  *[[hr:Debian:LAMP LAMP]]
-  *[[hr:Debian:Verlihub DC hub (Verlihub)]]
-  *[[hr:Debian:Jabber Jabber (Openfire)]]
-  *[[hr:Debian:Teamspeak2 TeamSpeak2]]
-  *[[hr:Debian:Ventrilo Ventrilo]]
-  *[[hr:Debian:VoIP VoIP (OpenSER)]]
-  *[[hr:Debian:WindowsFileSharing Windows File Sharing]] (Samba)
-  *[[hr:Debian:DcFileSharing DC file sharing]] (microdc2)
-  *[[hr:Debian:DynDNS DynDNS]]
+  *[[hr:Debian:Instalacija | Instalacija Debiana]]
+  *[[hr:Debian:Backup | Backup servera]]
+  *[[hr:Debian:NTP | Sinkronizacija vremena (NTP)]]
+  *[[hr:Debian:DNS | DNS (BIND 9)]]
+  *[[hr:Debian:LAMP | LAMP]]
+  *[[hr:Debian:Verlihub | DC hub (Verlihub)]]
+  *[[hr:Debian:Jabber | Jabber (Openfire)]]
+  *[[hr:Debian:Teamspeak2 | TeamSpeak2]]
+  *[[hr:Debian:Ventrilo | Ventrilo]]
+  *[[hr:Debian:VoIP | VoIP]] (OpenSER)
+  *[[hr:Debian:WindowsFileSharing | Windows File Sharing]] (Samba)
+  *[[hr:Debian:DcFileSharing | DC file sharing]] (microdc2)
+  *[[hr:Debian:DynDNS | DynDNS]]
 
 ===== Instalacija Debiana =====
 
