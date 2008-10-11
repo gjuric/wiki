@@ -1,0 +1,27 @@
+======= Backup servera ======
+
+Backup glavu čuva. Kako bi backupirali sve podatke iz baze podataka i sa sistema na udaljeni server (putem FTP-a), bit će nam potreban **ncftp** - FTP klijent kojeg ćemo instalirati na računalo koje želimo backupirati, te FTP server na računalu na koje želimo pohraniti backup.
+
+Instlirajmo ncftp na računalo koje backupiramo:
+
+  apt-get install ncftp
+
+Instalirajmo FTP server na računalu na kojem ćemo čuvati backup:
+
+  apt-get install proftpd
+
+Na pitanje želite li standalone server odgovorite potvrdno. Zatom na tom istom računalu (gdje ćemo čuvati backup) kreirajte korisnika i direktorij u koji želite pohraniti backup. Sada smo gotovi s radom na računalu na kojem držimo backup i možemo se vratiti na server koji želimo backupirati.
+
+Posjetite http://bash.cyberciti.biz/backup/wizard-ftp-script.php i unesite podatke u formu (ja backupiram direktorije /etc /var/www i /home). Izgeneriranu skriptu pohranite u recimo /root/backup.sh te učinite dotičnu dadoteku izvršnom:
+
+  chmod +x /root/backup.sh
+
+I za kraj, podesite da se skripta pokreće svakodnevno, kod mene se pokreće svaki dan u 04:23 ujutro, to napravite tako da upišete:
+
+  crontab -e
+
+I paste-ate ovu liniju:
+
+  23 4 * * * /root/backup.sh >/dev/null 2>&1
+
+Detalje o tome kako skripta radi možete pročitati na http://www.cyberciti.biz/tips/how-to-backup-mysql-databases-web-server-files-to-a-ftp-server-automatically.html
