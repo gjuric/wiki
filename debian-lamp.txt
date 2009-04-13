@@ -1,12 +1,12 @@
 ====== Debian server ======
 
-We are going to install a new web server that is supposed to serve HTTP traffic for example.com domain.
+We are going to install a new web server named atlantis that is supposed to serve HTTP traffic for example.com domain.
 
 ===== Installation =====
 
 Download Debian Lenny Tiny CD from http://www.debian.org/distrib/netinst and burn the image to a compact disk, or mount it as a CD image in your virtualisation software.
 
-Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **example** (replace with your domain) and our domain name is **com**.
+Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **atlantis** and our domain name is **example.com**.
 
 When prompted to select Debian mirror the selected choice is usually the best one. If your are not using HTTP proxy on your internet connection, or don't know what HTTP proxy is, just leave this field blank.
 
@@ -306,7 +306,7 @@ If you do not plan to run mail server on this machine, skip installing Postfix.
 
 If you plan to setup your own mail server on the same server choose Internet site. If not, you can just select Local only. Since I plan to install a mail server on the same machine I am choosing Internet site.
 
-For the System mail name enter your domain (example.com).
+For the System mail name enter your servers name including the domain (atlantis.example.com).
 
 ==== MySQL ====
 
@@ -333,10 +333,6 @@ If you can not access the page, check your firewall rules that the port 80 is op
 Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]].
 
 Configuration files for sites that Apache server are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are located in ''/etc/apache2/sites-enabled''.
-
-First we are going to disable the default site Apache configured for us by entering:
-
-  a2dissite default
 
 Now, we are going to create a configuration file for out example.com domain. Create an example.com in ''/etc/apache2/sites-available'' using ''nano /etc/apache2/sites-available/example.com'' and save this in the file:
 
@@ -495,7 +491,9 @@ For virus scanning and spam protection of our emails we will use [[http://www.cl
 
 Note: this tutorial is a combination of tutorials published on http://articles.slicehost.com/email and https://help.ubuntu.com/community/PostfixCompleteVirtualMailSystemHowto.
 
-==== Postfix ====
+You also must have a valid MX record in the DNS zone of your domain pointing to the IP address of the server.
+
+==== Plain Postfix ====
 
 If you haven't already installed Postfix, do it now:
 
@@ -503,9 +501,9 @@ If you haven't already installed Postfix, do it now:
 
 We are also installing telnet so we can easily check if everything is going well during the installation and configuration.
 
-During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter **example.com** as your domain.
+During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter your servers name **atlantis.example.com** as your domain.
 
-After installation finished check if Postfix is runing by connecting to port 25 on your loclahost:
+After installation finished check if Postfix is runing by connecting to port 25 on your localhost:
 
   # telnet localhost 25
   Trying 127.0.0.1...
@@ -526,7 +524,7 @@ If you see Postfix responding, Postfix is working. For another check we can try 
 
 You should be getting this email message on the account you specified.
 
-Check that you have your domain in a file ''/etc/mailname
+Check that you have your domain in a file ''/etc/mailname''
 
 Open ''/etc/postfix/main.cf'' it should look something like this:
 
@@ -560,11 +558,11 @@ smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
 # information on enabling SSL in the smtp client.
 
-myhostname = example.com
+myhostname = atlantis.example.com
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination = example.com, localhost.com, , localhost
+mydestination = atlantis.example.com, localhost.example.com, localhost
 relayhost =
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
 mailbox_size_limit = 0
@@ -572,3 +570,64 @@ recipient_delimiter = +
 inet_interfaces = all
 </file>
 
+
+If your hostname is something like mail.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
+
+  myorigin = $mydomain
+
+and ''mydestination = example.com, localhost.com, , localhost'' to 
+
+  mydestination = $mydomain, localhost.$mydomain, localhost
+
+If your hostname is just example.com doing this will set your origin to just ''.com''. Postfix extract $mydomain from the value of the myhostname and strips the part before the first dot, including the dot.
+
+You can also remove IPV6 notation from the mynetworks.
+
+Restart Postfix
+
+  invoke-rc.d postfix restart
+
+and try to send another test mail to check that we didn't mess something up.
+
+Now it would be a good time to also test if Postfix is receiving mails as well. Try sending an email to just ''root'' and to ''root@example.com''. The received email should be located in a file ''/var/mail/root''. Check that file and make sure that you are sending email from the right domain (sender should be root@example.com). If you do not receive an email check the Postifx log file ''/var/log/mail.log'' to see what went wrong.
+
+==== Postfix virtual user ====
+
+First we need to create a **vmail** user and group (with ID 5000) on the system. This is a system user who will store all of our email messages.
+
+  sudo groupadd -g 5000 vmail
+  sudo useradd -s /usr/sbin/nologin -g vmail -u 5000 vmail -d /home/vmail -m
+
+It is important that the vmail user can not login and belongs to vmail group. We are also creating a /home/vmail folder. It is going to hold all of the messages on our mail server.
+
+==== Postfix and MySQL ====
+
+Not, it is time to install some more packages
+
+  apt-get install postfix postfix-mysql mysql-server postfix-tls libsasl2-2 libsasl2-modules libsasl2-modules-sql sasl2-bin libpam-mysql openssl telnet mailx
+
+Do not bother with the packages we already installed, they will be skipped.
+
+As we sad that we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL we need to create a database and tables in the MySQL.
+
+First, we will download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
+
+  cd /root
+  wget http://garr.dl.sourceforge.net/sourceforge/postfixadmin/postfixadmin_2.3rc3.tar.gz
+  tar xvzzf postfixadmin_2.3rc3.tar.gz
+  
+
+
+To create a database in the MySQL that will store information about our email users enter:
+
+  mysqladmin -u root -p create mail
+
+and enter your root password.
+
+Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the newpassword to something else). To do this, first we have to log into MySQL:
+
+  mysql -u root -p
+
+and while in the MySQL prompt enter:
+
+  CREATE USER 'mailadmin'@'localhost' IDENTIFIED BY 'newpassword';
