@@ -288,7 +288,9 @@ After a while the **reach** column should have values greather that 0. Which mea
 
 ===== Server certificates =====
 
-We are going to use self signed certificates for https traffic to our Apache web server and for TLS/SSL access to our mail server we are going to create them now before we continue further.
+We are going to use self signed certificates for https traffic to our Apache web server and for TLS/SSL access to our mail server. 
+
+To create the self signed certificates:
 
 .... this part is missing ....
 
