@@ -326,6 +326,60 @@ Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see 
 
 If you can not access the page, check your firewall rules that the port 80 is open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
 
+=== Configure Virtual Hosts ===
+
+Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]].
+
+Configuration files for sites that Apache server are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are located in ''/etc/apache2/sites-enabled''.
+
+First we are going to disable the default site Apache configured for us by entering:
+
+  a2dissite default
+
+Now, we are going to create a configuration file for out example.com domain. Create an example.com in ''/etc/apache2/sites-available'' using ''nano /etc/apache2/sites-available/example.com'' and save this in the file:
+
+<file>
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@example.com
+        ServerName example.com
+
+        DocumentRoot /home/www/example.com/public_html
+
+        ErrorLog /home/www/example.com/logs/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /home/www/example.com/logs/access.log combined
+</VirtualHost>
+</file>
+
+You can see that the DocumentRoot points to ''/home/www/...''. This is because I choose to save all my sites in the ''/home/www'' folder in which where every domain has its own folder.
+
+Since those folders for our domain still don't exist, we need to create them
+
+  mkdir /home/www
+  mkdir /home/www/example.com
+  mkdir /home/www/example.com/logs
+  mkdir /home/www/example.com/public_html
+
+As you can see, we can tell Apache to save log files for each virtual host separately.
+
+Od Debian systems Apache runs as user www-data. So we need to give permissions to Apache to read and write to this folders. We can change the owner and the group of all files with
+
+  chown www-data:www-data -R /home/www/
+
+We are ready to enable our new virtual host
+
+  a2ensite example.com
+  update-rc.d apache2 restart
+
+=== Configuring HTTPS ===
+
+.... TODO ....
+
 ==== PHP and extensions ====
 
 To install PHP and mod_php module for Apache you have to run
