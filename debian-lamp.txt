@@ -595,8 +595,8 @@ Now it would be a good time to also test if Postfix is receiving mails as well. 
 
 First we need to create a **vmail** user and group (with ID 5000) on the system. This is a system user who will store all of our email messages.
 
-  sudo groupadd -g 5000 vmail
-  sudo useradd -s /usr/sbin/nologin -g vmail -u 5000 vmail -d /home/vmail -m
+  groupadd -g 5000 vmail
+  useradd -s /usr/sbin/nologin -g vmail -u 5000 vmail -d /home/vmail -m
 
 It is important that the vmail user can not login and belongs to vmail group. We are also creating a /home/vmail folder. It is going to hold all of the messages on our mail server.
 
@@ -718,7 +718,6 @@ where_field = username
 
 mysql_virtual_mailbox_maps.cf
 <file>
-
 user = mailadmin
 password = newpassword
 hosts = 127.0.0.1
@@ -729,3 +728,23 @@ where_field = username
 #additional_conditions = and active = '1'
 </file>
 
+Since these files contain passwords, we need to protect them:
+
+  atlantis:/etc/postfix# chgrp postfix /etc/postfix/mysql_*.cf
+  atlantis:/etc/postfix# chmod 640 /etc/postfix/mysql_*.cf
+
+Edit /etc/postfix/main.cf and at the bottom of the file add:
+
+  # Virtual Mailbox Domain Settings
+  
+  virtual_alias_maps = mysql:/etc/postfix/mysql_virtual_alias_maps.cf
+  virtual_mailbox_domains = mysql:/etc/postfix/mysql_virtual_domains_maps.cf
+  virtual_mailbox_maps = mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
+  virtual_mailbox_limit = 51200000
+  virtual_minimum_uid = 5000
+  virtual_uid_maps = static:5000
+  virtual_gid_maps = static:5000
+  virtual_mailbox_base = /home/vmail
+  virtual_transport = virtual
+
+You also need to delete everything after ''mydestination='' directive
