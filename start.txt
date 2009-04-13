@@ -1,3 +1,10 @@
-===== Wiki pages in Croatian language =====
+====== Debian ======
+===== Linux =====
+==== Debian ====
+
+  * [[Debian LAMP]] - Debian as a LAMP server
+
+
+====== Wiki pages in Croatian language ======
 
   * [[hr:Debian]] - kako instalirati Linux server koristeći Debian distribuciju, podesiti web server, DNS, DC hub, Jabber, ...
