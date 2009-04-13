@@ -1,0 +1,15 @@
+====== Debian as a LAMP server ======
+
+We are going to install a new web server that is supposed to serve HTTP traffic for example.com domain.
+
+===== Installation =====
+
+Download Debian Lenny Tiny CD from http://www.debian.org/distrib/netinst and burn the image to a compact disk, or mount it as a CD image in your virtualisation software.
+
+Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **example** (replace with your domain) and our domain name is **.com**.
+
+When prompted to select Debian mirror the selected choice is usually the best one. If your are not using HTTP proxy on your internet connection, or don't know what HTTP proxy is, just leave this field blank.
+
+When prompted to partition the disk for are Debian install, choose Guided - use entire disk. Install all files in one partition.
+
+Grab a cup of coffee and wait until installation finished fetching packages from the internet and installs the base system.
