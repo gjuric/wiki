@@ -330,7 +330,7 @@ If you can not access the page, check your firewall rules that the port 80 is op
 
 To install PHP and mod_php module for Apache you have to run
 
-apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl imagemagick
+apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl php-apc imagemagick
 
 If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
 
@@ -359,3 +359,51 @@ and inside enter:
 Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a PHP Info page. Remove the i.php file since exposing information about your web server to everyone is not a good idea:
 
   rm /var/www/i.php
+
+==== Apache and PHP configuration ====
+
+If you view your sites response headers (you can us WebDeveloper Toolbar for Firefox) you will see something like this:
+
+  Date: Mon, 13 Apr 2009 15:45:03 GMT
+  Server: Apache/2.2.9 (Debian) PHP/5.2.6-1+lenny2 with Suhosin-Patch
+  X-Powered-By: PHP/5.2.6-1+lenny2
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 10251
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+
+  200 OK
+
+We do not want to expose Apache and PHP version so we are going to remove those from the response headers.
+
+Open /etc/apache2/conf.d/security with nano and replace
+
+  ServerTokens Full
+  ServerSignature On
+
+
+with 
+
+  ServerTokens Prod
+  ServerSignature Off
+
+Now open /etc/php5/apache2/php.ini and change ''expose_php = On'' to ''expose_php = Off''.
+
+While you are in the php.ini file change ''magic_quotes_gpc = On'' to ''magic_quotes_gpc = Off''. I don't know why but Debian still ships PHP with magic quotes set to On.
+
+Reboot the Apache web server and check the response headers. Now you should see something like this:
+
+  Date: Mon, 13 Apr 2009 15:57:43 GMT
+  Server: Apache
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 9920
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+  
+  200 OK
+
+Application on my web server all use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
