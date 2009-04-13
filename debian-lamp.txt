@@ -616,18 +616,116 @@ First, we will download Postfix Admin using wget. Currently the latest version i
   wget http://garr.dl.sourceforge.net/sourceforge/postfixadmin/postfixadmin_2.3rc3.tar.gz
   tar xvzzf postfixadmin_2.3rc3.tar.gz
   
+move the extracted folder to ''/var/www/postfix''
 
+  mv /root/postfixadmin-2.3rc3 /var/www/postfix
 
-To create a database in the MySQL that will store information about our email users enter:
+Before installing Postfix Admin we must create a database and a user to access the database where we will store all of the information about our domains.
 
-  mysqladmin -u root -p create mail
-
-and enter your root password.
-
-Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the newpassword to something else). To do this, first we have to log into MySQL:
+Start MySQL:
 
   mysql -u root -p
 
-and while in the MySQL prompt enter:
+once in MySQL enter
+
+  create database mail;
+
+Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the newpassword to something else):
 
   CREATE USER 'mailadmin'@'localhost' IDENTIFIED BY 'newpassword';
+  GRANT ALL PRIVILEGES ON `mail` . * TO 'mailadmin'@'localhost';
+  FLUSH PRIVILEGES;
+
+you can exist MySQL by typing ''exit''.
+
+Open /var/www/postfix/config.inc.php with nano and change setting for:
+
+<file>
+
+ * The following line needs commenting out or removing before the
+ * application will run!
+ * Doing this implies you have changed this file as required.
+ */
+$CONF['configured'] = true;
+
+
+// Postfix Admin Path
+// Set the location of your Postfix Admin installation here.
+// YOU MUST ENTER THE COMPLETE URL e.g. http://domain.tld/postfixadmin
+$CONF['postfix_admin_url'] = 'http://YOUR-IP-ADDRESS/postfix';
+
+// shouldn't need changing.
+$CONF['postfix_admin_path'] = dirname(__FILE__);
+
+// Language config
+// Language files are located in './languages', change as required..
+$CONF['default_language'] = 'en';
+
+// Database Config
+// mysql = MySQL 3.23 and 4.0, 4.1 or 5
+// mysqli = MySQL 4.1+
+// pgsql = PostgreSQL
+$CONF['database_type'] = 'mysql';
+$CONF['database_host'] = 'localhost';
+$CONF['database_user'] = 'mailadmin';
+$CONF['database_password'] = 'newpassword';
+$CONF['database_name'] = 'mail';
+$CONF['database_prefix'] = '';
+</file>
+
+close the file and open http://YOUR-IP-ADDRESS/postfix/setup.php in your browser if everything went well you should be prompted to create the super admin account. You can close your browser and forget about Postfix Admin until we finish setting up Postfix with MySQL.
+
+Since now we have created our MySQL tables it is time to change some Postfix setting. First we need to create 4 files in the /etc/postfix/ folder:
+
+mysql_virtual_alias_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = alias
+select_field = goto
+where_field = address
+</file>
+
+mysql_virtual_domains_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = domain
+select_field = domain
+where_field = domain
+#additional_conditions = and backupmx = '0' and active = '1'
+</file>
+
+mysql_virtual_mailbox_limit_maps.cf
+<file>
+ser = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+user = postfix
+password = postfixpassword
+hosts = 127.0.0.1
+dbname = postfix
+table = mailbox
+select_field = quota
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
+mysql_virtual_mailbox_maps.cf
+<file>
+
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = mailbox
+select_field = maildir
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
