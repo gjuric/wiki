@@ -218,7 +218,7 @@ echo "Check your rules - iptables -L -n"
 echo ""
 </file>
 
-There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I wan to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
+There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I want to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
 
 The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
 
