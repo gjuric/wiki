@@ -475,5 +475,5 @@ Reboot the Apache web server and check the response headers. Now you should see 
   Keep-Alive: timeout=15, max=99
   Connection: Keep-Alive
   Content-Type: text/html
-
+  
   200 OK
