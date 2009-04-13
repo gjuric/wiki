@@ -1,4 +1,4 @@
-====== Debian as a LAMP server ======
+====== Debian server ======
 
 We are going to install a new web server that is supposed to serve HTTP traffic for example.com domain.
 
@@ -300,6 +300,8 @@ To create the self signed certificates:
 
 Installing MySQL, Apache and PHP on Debian systems is a breeze. But before installation of this packages we are going to install Postfix MTA because otherwise MySQL will install exim4 as a default MTA on our system (currently we don't have an MTA because we are running a minimal install server).
 
+If you do not plan to run mail server on this machine, skip installing Postfix.
+
   apt-get install postfix bsd-mailx
 
 If you plan to setup your own mail server on the same server choose Internet site. If not, you can just select Local only. Since I plan to install a mail server on the same machine I am choosing Internet site.
@@ -484,3 +486,9 @@ Reboot the Apache web server and check the response headers. Now you should see 
   Content-Type: text/html
   
   200 OK
+
+===== Mail server =====
+
+We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will user virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
+
+For virus scanning and spam protection of our emails we will use [[http://www.clamav.net/|ClamAV]] and [[http://spamassassin.apache.org/|Spamassassin]] that will be run using [[http://www.ijs.si/software/amavisd/|amavisd-new]].
