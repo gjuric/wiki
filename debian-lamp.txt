@@ -6,7 +6,7 @@ We are going to install a new web server that is supposed to serve HTTP traffic 
 
 Download Debian Lenny Tiny CD from http://www.debian.org/distrib/netinst and burn the image to a compact disk, or mount it as a CD image in your virtualisation software.
 
-Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **example** (replace with your domain) and our domain name is **.com**.
+Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **example** (replace with your domain) and our domain name is **com**.
 
 When prompted to select Debian mirror the selected choice is usually the best one. If your are not using HTTP proxy on your internet connection, or don't know what HTTP proxy is, just leave this field blank.
 
@@ -43,9 +43,7 @@ In case your server is connected to a network which broadcasts DHCP you didn't g
 
 Enter ''ifconfig'' and copy the output somewhere so you have access to network information you got from a DHCP server.
 
-Open up /etc/network/interfaces
-
-and replace 
+Open up /etc/network/interfaces with nano and replace 
 
   auto eth0
   iface eth0 inet dhcp
@@ -254,14 +252,6 @@ Reboot your server with
 
 and when it comes up again log in and check your iptables rules againg with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
 
-===== LAMP =====
-==== MySQL ====
-
-To install MySQL enter
-
-  apt-get install mysql-server mysql-client
-
-
 ===== Configuring NTP =====
 
 To make sure our servers time is always up to date we are going to install ntp package which enables our server to use NTP protocol for syncing your servers clock.
@@ -296,3 +286,75 @@ example:~# ntpq -p
 
 After a while the **reach** column should have values greather that 0. Which means that the NTP servers we are pooling for time information are reachable.
 
+===== Server certificates =====
+
+We are going to use self signed certificates for https traffic to our Apache web server and for TLS/SSL access to our mail server we are going to create them now before we continue further.
+
+.... this part is missing ....
+
+===== LAMP =====
+
+==== Before installation (MTA) ====
+
+Installing MySQL, Apache and PHP on Debian systems is a breeze. But before installation of this packages we are going to install Postfix MTA because otherwise MySQL will install exim4 as a default MTA on our system (currently we don't have an MTA because we are running a minimal install server).
+
+  apt-get install postfix bsd-mailx
+
+If you plan to setup your own mail server on the same server choose Internet site. If not, you can just select Local only. Since I plan to install a mail server on the same machine I am choosing Internet site.
+
+For the System mail name enter your domain (example.com).
+
+==== MySQL ====
+
+  apt-get install mysql-server mysql-client
+
+A advise you to set a password for root user.
+
+==== Apache ====
+
+Since we are going to use Apache mod_php for running PHP scripts we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
+
+  apt-get install apache2 apache2-mpm-prefork apache2-utils ssl-cert
+
+mod_rewrite is not enabled by default so we will enable it and restart Apache
+
+  a2enmod rewrite
+  invoke-rc.d apache2 restart
+
+Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see "It works!" displayed in your browser if Apache is working normaly.
+
+If you can not access the page, check your firewall rules that the port 80 is open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
+
+==== PHP and extensions ====
+
+To install PHP and mod_php module for Apache you have to run
+
+apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl imagemagick
+
+If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
+
+php5-pspell installs aspell for spell checking purposes, which install aspell-en dictionary. If you need some other dictionaries for your PHP applications install them as well.
+
+To check for available language dictionaries type:
+
+  apt-cache search aspell-
+
+A need Croation dictionary so I have to install is:
+
+  apt-get install aspell-hr
+
+Now it is time to restart the Apache server
+
+  invoke-rc.d apache2 restart
+
+By default, Apache server files from the /var/www folder on your server (we will change this later). To check if PHP is installed, create a new file using nano:
+
+  nano /var/www/i.php
+
+and inside enter: 
+
+  <?php phpinfo();
+
+Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a PHP Info page. Remove the i.php file since exposing information about your web server to everyone is not a good idea:
+
+  rm /var/www/i.php
