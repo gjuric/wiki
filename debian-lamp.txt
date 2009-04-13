@@ -18,8 +18,6 @@ Enter your root password. This is a password for root user who has all the privi
 
 You will be asked if you want to participate in the Debians popularity contest which collects information about most used packages. Feel free to answer whatever you like, by choosing Yes you are helping the Debian community to find the most used packages in the distribution. Help them out, it doesn't cost you a thing.
 
-==== Software selection ====
-
 When prompted to select collections of software packages deselect everrything. We just need to install the base system because we will add all needed packages when and if we need them.
 
 Since Debian will be the only system on our machine we have to select to install GRUB on to the master boot record.
@@ -30,3 +28,12 @@ When your computer boots up you can log in with the root user account and update
 
   apt-get update
   apt-get upgrade
+
+And that is it. Your new Debian is installed and ready for configuration. It took me around 10 to 15 minutes from start to finish.
+
+===== Essential software =====
+
+Since we opted for a bare bones system we are going to install some utility packages and an SSH server so we can connect to our server using Putty, or a *nix shell.
+
+  apt-get install ssh wget nano
+
