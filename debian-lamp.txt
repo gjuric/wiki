@@ -376,6 +376,25 @@ We are ready to enable our new virtual host
   a2ensite example.com
   update-rc.d apache2 restart
 
+==== Apache configuration ====
+
+Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable thiso pen /etc/apache2/conf.d/security with nano and replace
+
+  ServerTokens Full
+  ServerSignature On
+
+with 
+
+  ServerTokens Prod
+  ServerSignature Off
+
+All application on my web server use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
+
+All that is left to do, is to restart Apache
+
+  update-rc.d apache2 restart
+
+
 === Configuring HTTPS ===
 
 .... TODO ....
@@ -418,7 +437,7 @@ Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a 
 
   rm /var/www/i.php
 
-==== Apache and PHP configuration ====
+==== PHP configuration ====
 
 If you view your sites response headers (you can us WebDeveloper Toolbar for Firefox) you will see something like this:
 
@@ -434,20 +453,15 @@ If you view your sites response headers (you can us WebDeveloper Toolbar for Fir
 
   200 OK
 
-We do not want to expose Apache and PHP version so we are going to remove those from the response headers.
+While we got rid of the ''Server:'' exposing PHP version, we also want to remove X-Powered-By header.
 
-Open /etc/apache2/conf.d/security with nano and replace
+Open /etc/php5/apache2/php.ini and change
 
-  ServerTokens Full
-  ServerSignature On
+  expose_php = On
 
+to 
 
-with 
-
-  ServerTokens Prod
-  ServerSignature Off
-
-Now open /etc/php5/apache2/php.ini and change ''expose_php = On'' to ''expose_php = Off''.
+  expose_php = Off
 
 While you are in the php.ini file change ''magic_quotes_gpc = On'' to ''magic_quotes_gpc = Off''. I don't know why but Debian still ships PHP with magic quotes set to On.
 
@@ -461,7 +475,5 @@ Reboot the Apache web server and check the response headers. Now you should see 
   Keep-Alive: timeout=15, max=99
   Connection: Keep-Alive
   Content-Type: text/html
-  
-  200 OK
 
-Application on my web server all use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
+  200 OK
