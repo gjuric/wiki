@@ -376,6 +376,8 @@ We are ready to enable our new virtual host
   a2ensite example.com
   update-rc.d apache2 restart
 
+If you want to add other sites to your server, just create another file in the ''/etc/apache2/sites-available'' folder and repeat the procedure.
+
 ==== Apache configuration ====
 
 Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable thiso pen /etc/apache2/conf.d/security with nano and replace
