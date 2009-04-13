@@ -410,7 +410,9 @@ By default, Apache server files from the /var/www folder on your server (we will
 
 and inside enter: 
 
-  <?php phpinfo();
+<file>
+<?php phpinfo();
+</file>
 
 Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a PHP Info page. Remove the i.php file since exposing information about your web server to everyone is not a good idea:
 
