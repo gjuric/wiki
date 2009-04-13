@@ -331,8 +331,8 @@ If you can not access the page, check your firewall rules that the port 80 is op
 To install PHP and mod_php module for Apache you have to run
 
   apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev //
-  php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql
-  // php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl php-apc imagemagick
+  php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql //
+  php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl php-apc imagemagick
 
 If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
 
