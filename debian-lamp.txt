@@ -342,7 +342,7 @@ To check for available language dictionaries type:
 
   apt-cache search aspell-
 
-A need Croation dictionary so I have to install is:
+A need Croation dictionary so I have to install it:
 
   apt-get install aspell-hr
 
