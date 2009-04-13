@@ -492,3 +492,83 @@ Reboot the Apache web server and check the response headers. Now you should see 
 We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will user virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
 
 For virus scanning and spam protection of our emails we will use [[http://www.clamav.net/|ClamAV]] and [[http://spamassassin.apache.org/|Spamassassin]] that will be run using [[http://www.ijs.si/software/amavisd/|amavisd-new]].
+
+Note: this tutorial is a combination of tutorials published on http://articles.slicehost.com/email and https://help.ubuntu.com/community/PostfixCompleteVirtualMailSystemHowto.
+
+==== Postfix ====
+
+If you haven't already installed Postfix, do it now:
+
+  apt-get install postfix telnet mailx
+
+We are also installing telnet so we can easily check if everything is going well during the installation and configuration.
+
+During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter **example.com** as your domain.
+
+After installation finished check if Postfix is runing by connecting to port 25 on your loclahost:
+
+  # telnet localhost 25
+  Trying 127.0.0.1...
+  Connected to localhost.
+  Escape character is '^]'.
+  220 diabmon.com ESMTP Postfix (Debian/GNU)
+
+Type **quit** to exit.
+
+If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your other email account:
+
+  mail your-other-email@somedomain.com
+
+  Subject: test email from example.com
+  test body of the email.
+  .
+  Cc:
+
+You should be getting this email message on the account you specified.
+
+Check that you have your domain in a file ''/etc/mailname
+
+Open ''/etc/postfix/main.cf'' it should look something like this:
+
+<file>
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname.
+#myorigin = /etc/mailname
+
+smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+
+myhostname = example.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = example.com, localhost.com, , localhost
+relayhost =
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+</file>
+
