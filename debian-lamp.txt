@@ -395,7 +395,7 @@ All that is left to do, is to restart Apache
   update-rc.d apache2 restart
 
 
-=== Configuring HTTPS ===
+=== Configure HTTPS ===
 
 .... TODO ....
 
