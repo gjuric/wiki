@@ -396,6 +396,11 @@ All that is left to do, is to restart Apache
 
   update-rc.d apache2 restart
 
+== Rotate logs for virtual domains ==
+
+Since log files for every domain Apache serves is located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
+
+... TODO ...
 
 === Configure HTTPS ===
 
