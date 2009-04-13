@@ -399,7 +399,7 @@ All that is left to do, is to restart Apache
 
 .... TODO ....
 
-==== PHP and extensions ====
+==== PHP ====
 
 To install PHP and mod_php module for Apache you have to run
 
