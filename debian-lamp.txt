@@ -191,12 +191,35 @@ echo ""
 
 There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I wan to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
 
-The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server.
+The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
 
 Copy the script to /root/firewall.sh , cd into the /root directory and run
 
   sh ./firewall.sh
 
+In case you don't get your prompt back, you did something wrong. Connect to the server, reboot it and try again.
+
+You can now check your rules by using ''iptables -L -n'' and they should not be empty anymore.
+
+The problem is, that if you reboot your server now, all of the rules would be lost, so we have to make sure they are applied whenever our server is rebooted.
+
+The script populated the rules, but it also created a file called iptables.rules in our /root directory.
+
+We are going to copy this file to the /etc/network folder.
+
+  cp /root/iptables.rules /etc/network/
+
+Now we need to edit the /etc/network/interfaces file. Use nano to open it and add
+
+  pre-up iptables-restore < /etc/network/iptables.rules
+
+after the configuration options for your network interface. This line will make sure that before network interface is initialized the rules will be loaded into iptables.
+
+Reboot your server with
+
+  reboot
+
+and when it comes up again log in and check your iptables rules againg with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
 
 
 
