@@ -222,7 +222,7 @@ There are two important things your have to do. First replace the MY_IP with the
 
 The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
 
-If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. If that is the case, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box (port knocking) but they are out of the scope of this article.
+If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. If that is the case, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box ([[http://en.wikipedia.org/wiki/Port_knocking|port knocking]]) but they are out of the scope of this article.
 
 Copy the script to /root/firewall.sh , cd into the /root directory and run
 
