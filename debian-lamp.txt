@@ -311,8 +311,7 @@ For the System mail name enter your domain (example.com).
 A advise you to set a password for root user.
 
 ==== Apache ====
-
-Since we are going to use Apache mod_php for running PHP scripts we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
+We are going to use Apache mod_php for running PHP scripts so we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
 
   apt-get install apache2 apache2-mpm-prefork apache2-utils ssl-cert
 
