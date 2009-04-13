@@ -31,9 +31,31 @@ When your computer boots up you can log in with the root user account and update
 
 And that is it. Your new Debian is installed and ready for configuration. It took me around 10 to 15 minutes from start to finish.
 
-===== Essential software =====
+==== Essential software ====
 
 Since we opted for a bare bones system we are going to install some utility packages and an SSH server so we can connect to our server using Putty, or a *nix shell.
 
   apt-get install ssh wget nano
 
+===== Configuring NTP =====
+
+To make sure our servers time is always up to date we are going to install ntp package which enables our server to use NTP protocol for syncing your servers clock.
+
+  apt-get install ntp
+
+If your data center, or VPS provider offers an NTP server it is wise to use their NTP server. Open up /etc/ntp.conf with nano and replace:
+
+  server 0.debian.pool.ntp.org iburst dynamic
+  server 1.debian.pool.ntp.org iburst dynamic
+  server 2.debian.pool.ntp.org iburst dynamic
+  server 3.debian.pool.ntp.org iburst dynamic
+
+with
+
+  server ADDRESS-OF-NTP-SERVER-YOU-WANT-TO-USE
+
+After saving the changes you have to restart the NTP service by running
+
+  invoke-rc.d ntp restart
+
+''invoke-rc.d'' is Debians shortcut to /etc/init.d/. You can run ''/etc/init.d/ntp restart'' as well.
