@@ -59,3 +59,15 @@ After saving the changes you have to restart the NTP service by running
   invoke-rc.d ntp restart
 
 ''invoke-rc.d'' is Debians shortcut to /etc/init.d/. You can run ''/etc/init.d/ntp restart'' as well.
+
+You can examine if the NTP server is working as expected if you run the ''ntpq -p'' command:
+
+example:~# ntpq -p
+       remote           refid      st t when poll reach   delay   offset  jitter
+   ==============================================================================
+   zg1.ntp.CARNet. 161.53.1.2       2 u   58   64    3    7.157  106.619   4.158
+   zg2.ntp.CARNet. 161.53.1.2       2 u   57   64    3    7.677   25.934   4.792
+   morcic.RI.CARNe 161.53.1.2       2 u   58   64    3   11.796   26.527   7.751
+
+After a while the **reach** column should have values greather that 0. Which means that the NTP servers we are pooling for time information are reachable.
+
