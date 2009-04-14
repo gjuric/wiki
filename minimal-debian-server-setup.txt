@@ -292,10 +292,10 @@ For information on how to create a self signed certificate take a look at http:/
 
 Now, you should have 4 files:
 
- * server.crt
- * server.csr
- * server.key
- * server.key.org
+  * server.crt
+  * server.csr
+  * server.key
+  * server.key.org
 
 To create a .pem file you need to run:
 
