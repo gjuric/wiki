@@ -1,0 +1,750 @@
+====== Debian server ======
+
+We are going to install a new web server named atlantis that is supposed to serve HTTP traffic for example.com domain.
+
+===== Installation =====
+
+Download Debian Lenny Tiny CD from http://www.debian.org/distrib/netinst and burn the image to a compact disk, or mount it as a CD image in your virtualisation software.
+
+Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **atlantis** and our domain name is **example.com**.
+
+When prompted to select Debian mirror the selected choice is usually the best one. If your are not using HTTP proxy on your internet connection, or don't know what HTTP proxy is, just leave this field blank.
+
+When prompted to partition the disk for are Debian install, choose Guided - use entire disk. Install all files in one partition.
+
+Grab a cup of coffee and wait until installation finishes fetching packages from the internet and installs the base system.
+
+Enter your root password. This is a password for root user who has all the privileges on the system, so choose one carefully. After that, you have to create a new user for the system.
+
+You will be asked if you want to participate in the Debians popularity contest which collects information about most used packages. Feel free to answer whatever you like, by choosing Yes you are helping the Debian community to find the most used packages in the distribution. Help them out, it doesn't cost you a thing.
+
+When prompted to select collections of software packages deselect everrything. We just need to install the base system because we will add all needed packages when and if we need them.
+
+Since Debian will be the only system on our machine we have to select to install GRUB on to the master boot record.
+
+Your Debian system is almost ready to go. When asked, remove the installation media from your drive (or unmount the image in your virtualisation software) and reboot your computer.
+
+When your computer boots up you can log in with the root user account and update the packages in your system running:
+
+  apt-get update
+  apt-get upgrade
+
+And that is it. Your new Debian is installed and ready for configuration. It took me around 10 to 15 minutes from start to finish.
+
+==== Essential software ====
+
+Since we opted for a bare bones system we are going to install some utility packages and an SSH server so we can connect to our server using [[http://www.chiark.greenend.org.uk/~sgtatham/putty/|Putty]], or a *nix shell.
+
+  apt-get install ssh wget nano
+
+==== Static IP address ====
+
+In case your server is connected to a network which broadcasts DHCP you didn't get a chance to configure a static IP address for your server.
+
+Enter ''ifconfig'' and copy the output somewhere so you have access to network information you got from a DHCP server.
+
+Open up /etc/network/interfaces with nano and replace 
+
+  auto eth0
+  iface eth0 inet dhcp
+
+with
+
+  iface eth0 inet static
+        address YOUR-IP
+        netmask YOUR-NETMASK
+        network YOUR-NETWORK
+        broadcast YOUR-BROADCAST
+        gateway YOUR-GATEWAY
+        # dns-* options are implemented by the resolvconf package, if installed
+        dns-nameservers YOUR-DNS-SERVERS-SEPARATED-BY-SPACE
+        dns-search YOUR-DOMAIN
+  
+Reboot your server, check that your internet connection is working (try to ping google.com or some other host) and if everything is ok you can remove dhcp3-* packages from your system.
+
+  apt-get --purge remove dhcp3-common dhcp3-client
+
+Note that option --purge removes configuration files of the packages we are removing. If you do not use --purge they will be left on your system.
+
+===== iptables =====
+
+We are going to secure our web server using [[http://en.wikipedia.org/wiki/Iptables|iptables]] as a firewall.
+
+  apt-get install iptables
+
+If you check iptables rules with ''iptables -L'' you should see a clean chain list:
+
+  example:~# iptables -L
+  Chain INPUT (policy ACCEPT)
+  target     prot opt source               destination
+  
+  Chain FORWARD (policy ACCEPT)
+  target     prot opt source               destination
+  
+  Chain OUTPUT (policy ACCEPT)
+  target     prot opt source               destination
+
+To help us set up iptables rules we are going to use a modified version of a firewall script that is used for setting up QmailToaster on CentOS, the script looks like this:
+<file>
+#!/bin/sh
+#
+# Fedora Core 2
+# Nick Hemmesch <nick@ndhsoft.com>
+# June 2, 2004
+#
+# Customised for Debian/Ubuntu by Goran Juric, April 14, 2009.
+
+## Set your IP address
+MYIP="YOUR-IP-ADDRESS"
+ROUTER="IP-ADDRESS-THAT-BYPASSES-FIREWALL-RULES" 
+#
+## Flush rules & reset counters
+iptables -F
+iptables -X
+#
+## Set policies
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP
+#
+## Drop all incoming fragments
+iptables -A INPUT -i eth0 -f -j DROP
+#
+## Drop outside packets with local addresses - anti-spoofing measure
+iptables -A INPUT -s $MYIP -i ! lo -j DROP
+iptables -A INPUT -s 127.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 10.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 192.168.0.0/16 -i ! lo -j DROP
+iptables -A INPUT -s 224.0.0.0/4 -i ! lo -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 255.255.255.255 -i ! lo -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -i ! lo -j DROP
+iptables -A INPUT -s 221.240.102 -i ! lo -j DROP
+iptables -A INPUT -s 203.215.94.193 -i ! lo -j DROP
+iptables -A INPUT -s 218.71.137.68 -i ! lo -j DROP
+#
+## Pass all locally-originating packets
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+#
+## Accept ICMP ping echo requests
+## (this allows other people to ping your machine, among other things),
+iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+#
+## Accept all traffic from a specific machine with IP specified in the ROUTER variable
+# Traffic coming from the company router (address of the clients behind NAT)
+#iptables -A INPUT -p tcp -m tcp --syn -s $ROUTER -j ACCEPT
+#
+## Accept traffic on port p from a specific machine with IP x.x.x.x
+## replace p with the desired port number, and replace x.x.x.x with
+## the desired IP, then uncomment the line.
+#iptables -A INPUT -p tcp -m tcp --syn -s x.x.x.x --dport p -j ACCEPT
+#
+## Accept ftp-data and ftp (ports 20 & 21)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 20 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp --syn --dport 21 -j ACCEPT
+#
+## Accept ssh (port 22)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 22 -j ACCEPT
+#
+## Accept telnet (port 23)
+##iptables -A INPUT -p tcp -m tcp --syn --dport 23 -j ACCEPT
+#
+## Accept smtp (port 25 | 587)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 25 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp --syn --dport 587 -j ACCEPT
+#
+## Accept dns (port 53)
+#iptables -A INPUT -p udp -m udp -s 0/0 --dport 53 -d 0/0 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp -s 0/0 --dport 53 -d 0/0 -j ACCEPT
+#
+## Accept http (port 80)
+iptables -A INPUT -p tcp -m tcp --syn --dport 80 -j ACCEPT
+#
+## Accept pop3 (port 110)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 110 -j ACCEPT
+#
+## Accept pop3s (port 995)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 995 -j ACCEPT
+#
+## Accept inbound identd (port 113)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 113 -j ACCEPT
+## or you can reject and send back a TCP RST packet instead
+#iptables -A INPUT -p tcp -m tcp --dport 113 -j REJECT --reject-with tcp-reset
+#
+## Accept imap (port 143)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 143 -j ACCEPT
+## Accept imaps (port 993)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 993 -j ACCEPT
+#
+## Accept https (port 443)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 443 -j ACCEPT
+#
+## Accept smtps (port 465)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 465 -j ACCEPT
+## Accept msp (port 587)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 587 -j ACCEPT
+#
+## Accept SpamAssassin (port 783)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 783 -j ACCEPT
+#
+## Accept imaps (port 993)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 993 -j ACCEPT
+#
+## Accept pop3s (port 995)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 995 -j ACCEPT
+#
+## Accept mysql (port 3306)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 3306 -j ACCEPT
+#
+## Allow inbound established and related outside communication
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+#
+## Drop outside initiated connections
+iptables -A INPUT -m state --state NEW -j REJECT
+#
+## Allow all outbound tcp, udp, icmp traffic with state
+iptables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+## Save rules
+#
+#service iptables save#
+iptables-save > iptables.rules
+#
+echo ""
+echo "Check your rules - iptables -L -n"
+echo ""
+</file>
+
+There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I want to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
+
+The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
+
+If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. If that is the case, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box ([[http://en.wikipedia.org/wiki/Port_knocking|port knocking]]) but they are out of the scope of this article.
+
+Copy the script to /root/firewall.sh , cd into the /root directory and run
+
+  sh ./firewall.sh
+
+In case you don't get your prompt back, you did something wrong. Connect to the server, reboot it and try again.
+
+You can now check your rules by using ''iptables -L -n'' and they should not be empty anymore.
+
+The problem is, that if you reboot your server now, all of the rules would be lost, so we have to make sure they are applied whenever our server is rebooted.
+
+The script populated the rules, but it also created a file called iptables.rules in our /root directory.
+
+We are going to copy this file to the /etc/network folder.
+
+  cp /root/iptables.rules /etc/network/
+
+Now we need to edit the /etc/network/interfaces file. Use nano to open it and add
+
+  pre-up iptables-restore < /etc/network/iptables.rules
+
+after the configuration options for your network interface. This line will make sure that before network interface is initialized the rules will be loaded into iptables.
+
+Reboot your server with
+
+  reboot
+
+and when it comes up again log in and check your iptables rules againg with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
+
+===== Configuring NTP =====
+
+To make sure our servers time is always up to date we are going to install ntp package which enables our server to use NTP protocol for syncing your servers clock.
+
+  apt-get install ntp
+
+If your data center, or VPS provider offers an NTP server it is wise to use their NTP server. Open up /etc/ntp.conf with nano and replace:
+
+  server 0.debian.pool.ntp.org iburst dynamic
+  server 1.debian.pool.ntp.org iburst dynamic
+  server 2.debian.pool.ntp.org iburst dynamic
+  server 3.debian.pool.ntp.org iburst dynamic
+
+with
+
+  server ADDRESS-OF-NTP-SERVER-YOU-WANT-TO-USE
+
+After saving the changes you have to restart the NTP service by running
+
+  invoke-rc.d ntp restart
+
+''invoke-rc.d'' is Debians shortcut to /etc/init.d/. You can run ''/etc/init.d/ntp restart'' as well.
+
+You can examine if the NTP server is working as expected if you run the ''ntpq -p'' command:
+
+example:~# ntpq -p
+       remote           refid      st t when poll reach   delay   offset  jitter
+   ==============================================================================
+   zg1.ntp.CARNet. 161.53.1.2       2 u   58   64    3    7.157  106.619   4.158
+   zg2.ntp.CARNet. 161.53.1.2       2 u   57   64    3    7.677   25.934   4.792
+   morcic.RI.CARNe 161.53.1.2       2 u   58   64    3   11.796   26.527   7.751
+
+After a while the **reach** column should have values greather that 0. Which means that the NTP servers we are pooling for time information are reachable.
+
+===== Server certificates =====
+
+We are going to use self signed certificates for https traffic to our Apache web server and for TLS/SSL access to our mail server. 
+
+To create the self signed certificates:
+
+.... this part is missing ....
+
+===== LAMP =====
+
+==== Before installation (MTA) ====
+
+Installing MySQL, Apache and PHP on Debian systems is a breeze. But before installation of this packages we are going to install Postfix MTA because otherwise MySQL will install exim4 as a default MTA on our system (currently we don't have an MTA because we are running a minimal install server).
+
+If you do not plan to run mail server on this machine, skip installing Postfix.
+
+  apt-get install postfix bsd-mailx
+
+If you plan to setup your own mail server on the same server choose Internet site. If not, you can just select Local only. Since I plan to install a mail server on the same machine I am choosing Internet site.
+
+For the System mail name enter your servers name including the domain (atlantis.example.com).
+
+==== MySQL ====
+
+  apt-get install mysql-server mysql-client
+
+A advise you to set a password for root user.
+
+==== Apache ====
+We are going to use Apache mod_php for running PHP scripts so we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
+
+  apt-get install apache2 apache2-mpm-prefork apache2-utils ssl-cert
+
+mod_rewrite is not enabled by default so we will enable it and restart Apache
+
+  a2enmod rewrite
+  invoke-rc.d apache2 restart
+
+Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see "It works!" displayed in your browser if Apache is working normaly.
+
+If you can not access the page, check your firewall rules that the port 80 is open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
+
+=== Configure Virtual Hosts ===
+
+Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]].
+
+Configuration files for sites that Apache server are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are located in ''/etc/apache2/sites-enabled''.
+
+Now, we are going to create a configuration file for out example.com domain. Create an example.com in ''/etc/apache2/sites-available'' using ''nano /etc/apache2/sites-available/example.com'' and save this in the file:
+
+<file>
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@example.com
+        ServerName example.com
+
+        DocumentRoot /home/www/example.com/public_html
+
+        ErrorLog /home/www/example.com/logs/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /home/www/example.com/logs/access.log combined
+</VirtualHost>
+</file>
+
+You can see that the DocumentRoot points to ''/home/www/...''. This is because I choose to save all my sites in the ''/home/www'' folder in which where every domain has its own folder.
+
+Since those folders for our domain still don't exist, we need to create them
+
+  mkdir /home/www
+  mkdir /home/www/example.com
+  mkdir /home/www/example.com/logs
+  mkdir /home/www/example.com/public_html
+
+As you can see, we can tell Apache to save log files for each virtual host separately.
+
+Od Debian systems Apache runs as user www-data. So we need to give permissions to Apache to read and write to this folders. We can change the owner and the group of all files with
+
+  chown www-data:www-data -R /home/www/
+
+We are ready to enable our new virtual host
+
+  a2ensite example.com
+  update-rc.d apache2 restart
+
+If you want to add other sites to your server, just create another file in the ''/etc/apache2/sites-available'' folder and repeat the procedure.
+
+==== Apache configuration ====
+
+Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable thiso pen /etc/apache2/conf.d/security with nano and replace
+
+  ServerTokens Full
+  ServerSignature On
+
+with 
+
+  ServerTokens Prod
+  ServerSignature Off
+
+All application on my web server use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
+
+All that is left to do, is to restart Apache
+
+  update-rc.d apache2 restart
+
+== Rotate logs for virtual domains ==
+
+Since log files for every domain Apache serves is located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
+
+... TODO ...
+
+=== Configure HTTPS ===
+
+.... TODO ....
+
+==== PHP ====
+
+To install PHP and mod_php module for Apache you have to run
+
+  apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev //
+  php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql //
+  php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl php-apc imagemagick
+
+If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
+
+php5-pspell installs aspell for spell checking purposes, which install aspell-en dictionary. If you need some other dictionaries for your PHP applications install them as well.
+
+To check for available language dictionaries type:
+
+  apt-cache search aspell-
+
+A need Croation dictionary so I have to install it:
+
+  apt-get install aspell-hr
+
+Now it is time to restart the Apache server
+
+  invoke-rc.d apache2 restart
+
+By default, Apache server files from the /var/www folder on your server (we will change this later). To check if PHP is installed, create a new file using nano:
+
+  nano /var/www/i.php
+
+and inside enter: 
+
+<file>
+<?php phpinfo();
+</file>
+
+Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a PHP Info page. Remove the i.php file since exposing information about your web server to everyone is not a good idea:
+
+  rm /var/www/i.php
+
+==== PHP configuration ====
+
+If you view your sites response headers (you can us WebDeveloper Toolbar for Firefox) you will see something like this:
+
+  Date: Mon, 13 Apr 2009 15:45:03 GMT
+  Server: Apache/2.2.9 (Debian) PHP/5.2.6-1+lenny2 with Suhosin-Patch
+  X-Powered-By: PHP/5.2.6-1+lenny2
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 10251
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+
+  200 OK
+
+While we got rid of the ''Server:'' exposing PHP version, we also want to remove X-Powered-By header.
+
+Open /etc/php5/apache2/php.ini and change
+
+  expose_php = On
+
+to 
+
+  expose_php = Off
+
+While you are in the php.ini file change ''magic_quotes_gpc = On'' to ''magic_quotes_gpc = Off''. I don't know why but Debian still ships PHP with magic quotes set to On.
+
+Reboot the Apache web server and check the response headers. Now you should see something like this:
+
+  Date: Mon, 13 Apr 2009 15:57:43 GMT
+  Server: Apache
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 9920
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+  
+  200 OK
+
+===== Mail server =====
+
+We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will user virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
+
+For virus scanning and spam protection of our emails we will use [[http://www.clamav.net/|ClamAV]] and [[http://spamassassin.apache.org/|Spamassassin]] that will be run using [[http://www.ijs.si/software/amavisd/|amavisd-new]].
+
+Note: this tutorial is a combination of tutorials published on http://articles.slicehost.com/email and https://help.ubuntu.com/community/PostfixCompleteVirtualMailSystemHowto.
+
+You also must have a valid MX record in the DNS zone of your domain pointing to the IP address of the server.
+
+==== Plain Postfix ====
+
+If you haven't already installed Postfix, do it now:
+
+  apt-get install postfix telnet mailx
+
+We are also installing telnet so we can easily check if everything is going well during the installation and configuration.
+
+During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter your servers name **atlantis.example.com** as your domain.
+
+After installation finished check if Postfix is runing by connecting to port 25 on your localhost:
+
+  # telnet localhost 25
+  Trying 127.0.0.1...
+  Connected to localhost.
+  Escape character is '^]'.
+  220 diabmon.com ESMTP Postfix (Debian/GNU)
+
+Type **quit** to exit.
+
+If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your other email account:
+
+  mail your-other-email@somedomain.com
+
+  Subject: test email from example.com
+  test body of the email.
+  .
+  Cc:
+
+You should be getting this email message on the account you specified.
+
+Check that you have your domain in a file ''/etc/mailname''
+
+Open ''/etc/postfix/main.cf'' it should look something like this:
+
+<file>
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname.
+#myorigin = /etc/mailname
+
+smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+
+myhostname = atlantis.example.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = atlantis.example.com, localhost.example.com, localhost
+relayhost =
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+</file>
+
+
+If your hostname is something like mail.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
+
+  myorigin = $mydomain
+
+and ''mydestination = example.com, localhost.com, , localhost'' to 
+
+  mydestination = $mydomain, localhost.$mydomain, localhost
+
+If your hostname is just example.com doing this will set your origin to just ''.com''. Postfix extract $mydomain from the value of the myhostname and strips the part before the first dot, including the dot.
+
+You can also remove IPV6 notation from the mynetworks.
+
+Restart Postfix
+
+  invoke-rc.d postfix restart
+
+and try to send another test mail to check that we didn't mess something up.
+
+Now it would be a good time to also test if Postfix is receiving mails as well. Try sending an email to just ''root'' and to ''root@example.com''. The received email should be located in a file ''/var/mail/root''. Check that file and make sure that you are sending email from the right domain (sender should be root@example.com). If you do not receive an email check the Postifx log file ''/var/log/mail.log'' to see what went wrong.
+
+==== Postfix virtual user ====
+
+First we need to create a **vmail** user and group (with ID 5000) on the system. This is a system user who will store all of our email messages.
+
+  groupadd -g 5000 vmail
+  useradd -s /usr/sbin/nologin -g vmail -u 5000 vmail -d /home/vmail -m
+
+It is important that the vmail user can not login and belongs to vmail group. We are also creating a /home/vmail folder. It is going to hold all of the messages on our mail server.
+
+==== Postfix and MySQL ====
+
+Not, it is time to install some more packages
+
+  apt-get install postfix postfix-mysql mysql-server postfix-tls libsasl2-2 libsasl2-modules libsasl2-modules-sql sasl2-bin libpam-mysql openssl telnet mailx
+
+Do not bother with the packages we already installed, they will be skipped.
+
+As we sad that we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL we need to create a database and tables in the MySQL.
+
+First, we will download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
+
+  cd /root
+  wget http://garr.dl.sourceforge.net/sourceforge/postfixadmin/postfixadmin_2.3rc3.tar.gz
+  tar xvzzf postfixadmin_2.3rc3.tar.gz
+  
+move the extracted folder to ''/var/www/postfix''
+
+  mv /root/postfixadmin-2.3rc3 /var/www/postfix
+
+Before installing Postfix Admin we must create a database and a user to access the database where we will store all of the information about our domains.
+
+Start MySQL:
+
+  mysql -u root -p
+
+once in MySQL enter
+
+  create database mail;
+
+Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the newpassword to something else):
+
+  CREATE USER 'mailadmin'@'localhost' IDENTIFIED BY 'newpassword';
+  GRANT ALL PRIVILEGES ON `mail` . * TO 'mailadmin'@'localhost';
+  FLUSH PRIVILEGES;
+
+you can exist MySQL by typing ''exit''.
+
+Open /var/www/postfix/config.inc.php with nano and change setting for:
+
+<file>
+
+ * The following line needs commenting out or removing before the
+ * application will run!
+ * Doing this implies you have changed this file as required.
+ */
+$CONF['configured'] = true;
+
+
+// Postfix Admin Path
+// Set the location of your Postfix Admin installation here.
+// YOU MUST ENTER THE COMPLETE URL e.g. http://domain.tld/postfixadmin
+$CONF['postfix_admin_url'] = 'http://YOUR-IP-ADDRESS/postfix';
+
+// shouldn't need changing.
+$CONF['postfix_admin_path'] = dirname(__FILE__);
+
+// Language config
+// Language files are located in './languages', change as required..
+$CONF['default_language'] = 'en';
+
+// Database Config
+// mysql = MySQL 3.23 and 4.0, 4.1 or 5
+// mysqli = MySQL 4.1+
+// pgsql = PostgreSQL
+$CONF['database_type'] = 'mysql';
+$CONF['database_host'] = 'localhost';
+$CONF['database_user'] = 'mailadmin';
+$CONF['database_password'] = 'newpassword';
+$CONF['database_name'] = 'mail';
+$CONF['database_prefix'] = '';
+</file>
+
+close the file and open http://YOUR-IP-ADDRESS/postfix/setup.php in your browser if everything went well you should be prompted to create the super admin account. You can close your browser and forget about Postfix Admin until we finish setting up Postfix with MySQL.
+
+Since now we have created our MySQL tables it is time to change some Postfix setting. First we need to create 4 files in the /etc/postfix/ folder:
+
+mysql_virtual_alias_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = alias
+select_field = goto
+where_field = address
+</file>
+
+mysql_virtual_domains_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = domain
+select_field = domain
+where_field = domain
+#additional_conditions = and backupmx = '0' and active = '1'
+</file>
+
+mysql_virtual_mailbox_limit_maps.cf
+<file>
+ser = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+user = postfix
+password = postfixpassword
+hosts = 127.0.0.1
+dbname = postfix
+table = mailbox
+select_field = quota
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
+mysql_virtual_mailbox_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = mailbox
+select_field = maildir
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
+Since these files contain passwords, we need to protect them:
+
+  atlantis:/etc/postfix# chgrp postfix /etc/postfix/mysql_*.cf
+  atlantis:/etc/postfix# chmod 640 /etc/postfix/mysql_*.cf
+
+Edit /etc/postfix/main.cf and at the bottom of the file add:
+
+  # Virtual Mailbox Domain Settings
+  
+  virtual_alias_maps = mysql:/etc/postfix/mysql_virtual_alias_maps.cf
+  virtual_mailbox_domains = mysql:/etc/postfix/mysql_virtual_domains_maps.cf
+  virtual_mailbox_maps = mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
+  virtual_mailbox_limit = 51200000
+  virtual_minimum_uid = 5000
+  virtual_uid_maps = static:5000
+  virtual_gid_maps = static:5000
+  virtual_mailbox_base = /home/vmail
+  virtual_transport = virtual
+
+You also need to delete everything after ''mydestination='' directive
