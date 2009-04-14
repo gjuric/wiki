@@ -843,7 +843,7 @@ send email to ''root@example.com''.
 
 Check your ''/home/vmail/example.com'' folder. There should be a ''root'' folder inside, with 3 folders inside ''root'' : cur  new  tmp. Inside the folder new you should see your email message. If this didn't work, check ''/var/log/mail.log'' for possible hints on what went wrong.
 
-==== Secure login ====
+==== Saslauthd ====
 
 Since we want to allow users to log in to our mail server so they can send emails, we need to configure some kind of protection. First we need to make sure users can log in using the same username and password as the one they will be using for checking email.
 
@@ -855,13 +855,13 @@ Open ''/etc/default/saslauthd'' with nano and change ''START=no'' to
 
 and at the end of the file we need to change ''OPTIONS="-c -m /var/run/saslauthd"'' to
 
-  OPTIONS="-c -m /var/spool/postfix/var/run/saslauthd -r"
+  OPTIONS="-c -r -m /var/spool/postfix/var/run/saslauthd"
 
 We also need to create this directory
 
   mkdir -p /var/spool/postfix/var/run/saslauthd
 
-and one symbolic link
+and one symbolic link (because Postfix on Debian is running from a chrooted environment and other applications you maybe using on your server (including testsaslauthd for testing if saslauthd is working correctly) are not aware of us changing the saslauthd directory).
 
   ln -s /var/spool/postfix/var/run/saslauthd /var/run/saslauthd
  
@@ -897,8 +897,6 @@ Restart Postfix and sasl
   /etc/init.d/postfix restart
   /etc/init.d/saslauthd restart
 
-TODO: change permissions
-
 Now, we can check is saslauthd is working correctly
 
   testsaslauthd -s smtp -u root@example.com -p newpassword
@@ -908,9 +906,9 @@ Ofcourse, replace root@example.com with the mail account you have created with P
   atlantis:~# testsaslauthd -s smtp -u root@example.com -p newpassword
   0: OK "Success."
 
-If you do not get "Success." as response, check that you have a symbolic link in /var/run/ named saslauthd and that it points to ''/var/spool/postfix/var/run/saslautdh''.
+If you do not get "Success." as a response, check that you have a symbolic link in /var/run/ named saslauthd and that it points to ''/var/spool/postfix/var/run/saslautdh''.
 
-We have to change permission to these two files as well:
+We have to change permissions to these two files as well:
 
   chgrp sasl /etc/pam.d/smtp
   chmod 640 /etc/pam.d/smtp
@@ -921,3 +919,4 @@ Restart Postfix and sasl
 
   /etc/init.d/postfix restart
   /etc/init.d/saslauthd restart
+
