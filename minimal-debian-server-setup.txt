@@ -493,17 +493,69 @@ Note: this tutorial is a combination of tutorials published on http://articles.s
 
 You also must have a valid MX record in the DNS zone of your domain pointing to the IP address of the server.
 
+==== Hostname & DNS records ====
+
+Note: Server in this example is named atlantis.example.com. 
+
+First, we need to check our hostname
+
+  atlantis:~# hostname -f
+  atlantis.diabmon.com
+
+If hostname did not return FQDN of your server edit ''/etc/hosts''. You should see something like this, if not, change according to your IP address and server name.
+
+  127.0.0.1         localhost
+  YOUR-IP-ADDRESS   atlantis.example.com
+
+Now check your ''/etc/hostname'' file:
+
+  atlantis.example.com
+
+Change the names to match your server name and reboot the server. Run ''hostname -f'' again and you should see ''atlantis.example.com''.
+
+Now, we need to check that our DNS servers have an MX record for our example.com domain. Install DNS utilities:
+
+  apt-get install dnsutils
+
+We are going to use ''host'' to check information about our domain:
+
+  atlantis:~# host example.com
+  example.com has address YOUR-IP-ADDRESS
+  example.com mail is handled by 0 mail.example.com.
+
+We can see, that the mail for our domain is handled by mail.example.com. Now we must make sure that mail.example.com point to the same address as our server (atlantis.example.com).
+
+  atlantis:~# nslookup mail.example.com
+  Server:         YOUR-DNS-SERVER
+  Address:        YOUR-DNS-ADDRESS#53
+
+  Non-authoritative answer:
+  mail.example.com        canonical name = example.com.
+  Name:   diabmon.com
+  Address: YOUR-IP-ADDRESS
+
+It would be also nice if your reverse DNS points to the same name (atlantis.example.com)
+
+  atlantis:~# nslookup YOUR-IP-ADDRESS
+  Server:         YOUR-DNS-SERVER
+  Address:        YOUR-DNS-SERVER#53
+  
+  Non-authoritative answer:
+  YOUR-IP-ADDRES-REVERSE.in-addr.arpa      name = atlantis.example.com.
+
+If they do not match. Ask your ISP to change this for you.
+
 ==== Plain Postfix ====
 
 If you haven't already installed Postfix, do it now:
 
   apt-get install postfix telnet mailx
 
-We are also installing telnet so we can easily check if everything is going well during the installation and configuration.
+Note: we are also installing telnet so we can easily check if everything is going well during the installation and configuration. As well as mailx package so we can send emails from the terminal using the ''mail'' command.
 
-During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter your servers name **atlantis.example.com** as your domain.
+During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter your servers name **atlantis.example.com**. It is important that your server name is not just **example.com**.
 
-After installation finished check if Postfix is runing by connecting to port 25 on your localhost:
+After installation finishes check if Postfix is runing by connecting to port 25 on your localhost with telnet:
 
   # telnet localhost 25
   Trying 127.0.0.1...
@@ -511,7 +563,7 @@ After installation finished check if Postfix is runing by connecting to port 25 
   Escape character is '^]'.
   220 diabmon.com ESMTP Postfix (Debian/GNU)
 
-Type **quit** to exit.
+Note: Type **quit** to exit.
 
 If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your other email account:
 
@@ -524,9 +576,9 @@ If you see Postfix responding, Postfix is working. For another check we can try 
 
 You should be getting this email message on the account you specified.
 
-Check that you have your domain in a file ''/etc/mailname''
+Check that you have your ''example.com'' in a file ''/etc/mailname''
 
-Open ''/etc/postfix/main.cf'' it should look something like this:
+Open ''/etc/postfix/main.cf'', it should look something like this:
 
 <file>
 # See /usr/share/postfix/main.cf.dist for a commented, more complete version
@@ -571,17 +623,17 @@ inet_interfaces = all
 </file>
 
 
-If your hostname is something like mail.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
+If your hostname is something like atlantis.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
 
   myorigin = $mydomain
 
-and ''mydestination = example.com, localhost.com, , localhost'' to 
+and ''mydestination = atlantis.example.com, localhost.example.com, localhost'' to 
 
   mydestination = $mydomain, localhost.$mydomain, localhost
 
 If your hostname is just example.com doing this will set your origin to just ''.com''. Postfix extract $mydomain from the value of the myhostname and strips the part before the first dot, including the dot.
 
-You can also remove IPV6 notation from the mynetworks.
+You can also remove IPV6 notation from the mynetworks and leave just ''mynetworks = 127.0.0.0/8''.
 
 Restart Postfix
 
@@ -608,9 +660,9 @@ Not, it is time to install some more packages
 
 Do not bother with the packages we already installed, they will be skipped.
 
-As we sad that we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL we need to create a database and tables in the MySQL.
+As we sad that, we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL so we need to create database and tables in the MySQL.
 
-First, we will download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
+Download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
 
   cd /root
   wget http://garr.dl.sourceforge.net/sourceforge/postfixadmin/postfixadmin_2.3rc3.tar.gz
@@ -628,20 +680,19 @@ Start MySQL:
 
 once in MySQL enter
 
-  create database mail;
+  CREATE DATABASE mail;
 
-Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the newpassword to something else):
+Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the ''newpassword'' to something else):
 
   CREATE USER 'mailadmin'@'localhost' IDENTIFIED BY 'newpassword';
   GRANT ALL PRIVILEGES ON `mail` . * TO 'mailadmin'@'localhost';
   FLUSH PRIVILEGES;
 
-you can exist MySQL by typing ''exit''.
+you can exit MySQL now by typing ''exit''.
 
-Open /var/www/postfix/config.inc.php with nano and change setting for:
+Open /var/www/postfix/config.inc.php with nano and change setting to:
 
 <file>
-
  * The following line needs commenting out or removing before the
  * application will run!
  * Doing this implies you have changed this file as required.
@@ -673,7 +724,7 @@ $CONF['database_name'] = 'mail';
 $CONF['database_prefix'] = '';
 </file>
 
-close the file and open http://YOUR-IP-ADDRESS/postfix/setup.php in your browser if everything went well you should be prompted to create the super admin account. You can close your browser and forget about Postfix Admin until we finish setting up Postfix with MySQL.
+close the file and open http://YOUR-IP-ADDRESS/postfix/setup.php in your browser if everything went well you should be prompted to create the super admin account. Create the account, and after you log in into Postfix Admin create a new virtual domain 'example.com', and create new user accout ''root@example.com''.
 
 Since now we have created our MySQL tables it is time to change some Postfix setting. First we need to create 4 files in the /etc/postfix/ folder:
 
@@ -716,6 +767,10 @@ where_field = username
 #additional_conditions = and active = '1'
 </file>
 
+Note: We are not going to use mailbox limits because for this to work we should patch Postfix with a quota patch before installing. Since we are building a server for our personal use I do not really see the need for quotas. If you need them, there are a lot of resources on the internet that explain how to download source packages of Postfix, apply the quota patch and set quota for users.
+
+I am leaving this here, if somebody needs it.
+
 mysql_virtual_mailbox_maps.cf
 <file>
 user = mailadmin
@@ -726,6 +781,29 @@ table = mailbox
 select_field = maildir
 where_field = username
 #additional_conditions = and active = '1'
+</file>
+
+Although most of the guides on the net use this file, I do not like it because mailboxes for all virtual domains are saved in /home/vmail/username@domain.com . I like to separate my domain so that every domain has its own folder: ''/home/vmail/domain.com/username''. So we are going to change this file to:
+
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = mailbox
+query = SELECT CONCAT(domain,'/',SUBSTRING_INDEX(maildir,'@',1),'/') FROM mailbox WHERE username='%s' AND active = 1
+</file>
+
+/etc/postfix/mysql_relay_domains_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = domain
+select_field = domain
+where_field = domain
+additional_conditions = and backupmx = '1'
 </file>
 
 Since these files contain passwords, we need to protect them:
@@ -747,4 +825,21 @@ Edit /etc/postfix/main.cf and at the bottom of the file add:
   virtual_mailbox_base = /home/vmail
   virtual_transport = virtual
 
-You also need to delete everything after ''mydestination='' directive
+You also need to delete everything after ''mydestination='' directive.
+
+Restart postfix
+
+  invoke-rc.d postfix restart
+
+send email to ''root@example.com''.
+
+
+  mail root@example.com
+
+  Subject: test email from example.com
+  test body of the email.
+  .
+  Cc:
+
+Check your ''/home/vmail/example.com'' folder. There should be a ''root'' folder inside, with 3 folders inside ''root'' : cur  new  tmp. Inside the folder new you should see your email message. If this didn't work, check ''/var/log/mail.log'' for possible hints on what went wrong.
+
