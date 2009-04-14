@@ -960,7 +960,14 @@ Note: ''/etc/ssl/self-signed/server.pem'' should point to the location of your .
 
 We are telling Postfix that we want to allow sending emails without authentication for our networks (localhost) and for users that authenticated using sasl we configured previously.
 
-Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected.
+Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected. (Note: change the firewall rules before).
+
+==== Postfix firewall rules ====
+
+You have to change Firewall rules to allow inbound connections to ports that Postfix uses:
+
+  * Port 25 for incoming mail from other mail servers and from clients (if they can use this port)
+  * Submission port 587 for incoming mail from users
 
 ==== Courier ====
 
@@ -1026,3 +1033,10 @@ And if you have installed POP3 as well
 
   /etc/init.d/courier-pop restart
   /etc/init.d/courier-pop-ssl restart
+
+==== Courier firewall rules ====
+
+You have to change Firewall rules to allow inbound connections to ports that Courier uses:
+
+  * Pop and secure Pop use ports 110 and 995 respectively.
+  * Imap and secure imap use ports 143 and 993 respectively.
