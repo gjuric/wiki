@@ -288,11 +288,7 @@ After a while the **reach** column should have values greather that 0. Which mea
 
 ===== Server certificates =====
 
-We are going to use self signed certificates for https traffic to our Apache web server and for TLS/SSL access to our mail server. 
-
-To create the self signed certificates:
-
-.... this part is missing ....
+For information on how to create a self signed certificate take a look at http://www.akadia.com/services/ssh_test_certificate.html just make sure that you enter your host name when asked for ''Common Name (eg, YOUR name) []'' **atlantis.example.com**
 
 ===== LAMP =====
 
