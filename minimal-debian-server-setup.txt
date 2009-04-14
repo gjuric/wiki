@@ -843,3 +843,81 @@ send email to ''root@example.com''.
 
 Check your ''/home/vmail/example.com'' folder. There should be a ''root'' folder inside, with 3 folders inside ''root'' : cur  new  tmp. Inside the folder new you should see your email message. If this didn't work, check ''/var/log/mail.log'' for possible hints on what went wrong.
 
+==== Secure login ====
+
+Since we want to allow users to log in to our mail server so they can send emails, we need to configure some kind of protection. First we need to make sure users can log in using the same username and password as the one they will be using for checking email.
+
+For this, we are going to use Saslauthd. We installed it at the beginning of this chapter when we were installing Postfix. Saslauthd will also use MySQL to verify user credentials.
+
+Open ''/etc/default/saslauthd'' with nano and change ''START=no'' to
+
+  START=yes
+
+and at the end of the file we need to change ''OPTIONS="-c -m /var/run/saslauthd"'' to
+
+  OPTIONS="-c -m /var/spool/postfix/var/run/saslauthd -r"
+
+We also need to create this directory
+
+  mkdir -p /var/spool/postfix/var/run/saslauthd
+
+and one symbolic link
+
+  ln -s /var/spool/postfix/var/run/saslauthd /var/run/saslauthd
+ 
+We also need to create two more files:
+
+  nano /etc/pam.d/smtp
+
+<file>
+auth    required   pam_mysql.so user=mailadmin passwd=newpassword host=127.0.0.1 db=mail table=mailbox usercolumn=username passwdcolumn=password crypt=1
+account sufficient pam_mysql.so user=mailadmin passwd=newpassword host=127.0.0.1 db=mail table=mailbox usercolumn=username passwdcolumn=password crypt=1
+</file>
+
+  nano /etc/postfix/sasl/smtpd.conf
+
+<file>
+pwcheck_method: saslauthd
+mech_list: plain login
+allow_plaintext: true
+auxprop_plugin: mysql
+sql_hostnames: 127.0.0.1
+sql_user: mailadmin
+sql_passwd: newpassword
+sql_database: mail
+sql_select: select password from mailbox where username = '%u'
+</file>
+
+We need to add Postfix to the sasl group so it can access the saslauthd process we just setup:
+
+  adduser postfix sasl
+
+Restart Postfix and sasl
+
+  /etc/init.d/postfix restart
+  /etc/init.d/saslauthd restart
+
+TODO: change permissions
+
+Now, we can check is saslauthd is working correctly
+
+  testsaslauthd -s smtp -u root@example.com -p newpassword
+
+Ofcourse, replace root@example.com with the mail account you have created with Postfix Admin, and newpassword with the password you have set for this user.
+
+  atlantis:~# testsaslauthd -s smtp -u root@example.com -p newpassword
+  0: OK "Success."
+
+If you do not get "Success." as response, check that you have a symbolic link in /var/run/ named saslauthd and that it points to ''/var/spool/postfix/var/run/saslautdh''.
+
+We have to change permission to these two files as well:
+
+  chgrp sasl /etc/pam.d/smtp
+  chmod 640 /etc/pam.d/smtp
+  chgrp postfix /etc/postfix/sasl/smtpd.conf
+  chmod 640 /etc/postfix/sasl/smtpd.conf
+
+Restart Postfix and sasl
+
+  /etc/init.d/postfix restart
+  /etc/init.d/saslauthd restart
