@@ -962,6 +962,22 @@ We are telling Postfix that we want to allow sending emails without authenticati
 
 Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected. (Note: change the firewall rules before).
 
+==== Enable submission port ====
+
+Many ISPs today block port 25 for users. To be able to send email using our Postfix mail server as our outgoing server, we need to enable submission port (port 587) for Postfix.
+
+Open ''/etc/postfix/master.cf'' and uncomment the folloging lines:
+
+<file>
+submission inet n       -       -       -       -       smtpd
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+</file>
+
+Note: spaces in the lines after the first line are important. Do not delete them!
+
 ==== Postfix firewall rules ====
 
 You have to change Firewall rules to allow inbound connections to ports that Postfix uses:
