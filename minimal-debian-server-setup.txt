@@ -930,3 +930,99 @@ Restart Postfix and sasl
   /etc/init.d/postfix restart
   /etc/init.d/saslauthd restart
 
+==== TLS ====
+
+Now, we are going to configure Postfix to use TLS. If you still haven't created a self signed certificates do it now.
+
+Edit ''/etc/postfix/main.cf'' and look for the part containing:
+
+<file>
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+</file>
+
+and replace it with
+
+<file>
+smtpd_sasl_auth_enable = yes
+broken_sasl_auth_clients = yes
+smtpd_sasl_authenticated_header = yes
+smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/ssl/self-signed/server.pem
+smtpd_tls_key_file = $smtpd_tls_cert_file
+</file>
+
+Note: ''/etc/ssl/self-signed/server.pem'' should point to the location of your .pem file.
+
+We are telling Postfix that we want to allow sending emails without authentication for our networks (localhost) and for users that authenticated using sasl we configured previously.
+
+Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected.
+
+==== Courier ====
+
+To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you can run:
+
+  apt-get install courier-authdaemon courier-authlib-mysql courier-pop courier-pop-ssl courier-imap courier-imap-ssl
+
+Since I do not use POP3 I am only installing
+
+  apt-get install courier-authdaemon courier-authlib-mysql courier-imap courier-imap-ssl
+
+When asked if you would like to create directories for web-based administration, answer **No**.
+
+Open ''/etc/courier/authdaemonrc'' and change
+
+  authmodulelist="authpam"
+to
+  authmodulelist="authmysql"
+
+Create a backup of the ''/etc/courier/authmysqlrc'' file
+
+  cd /etc/courier/
+  cp authmysqlrc authmysqlrc~
+
+Empty ''/etc/courier/authmysqlrc''
+
+  cat /dev/null > /etc/courier/authmysqlrc
+  nano /etc/courier/authmysqlrc
+
+And paste the following:
+
+<file>
+MYSQL_SERVER localhost
+MYSQL_USERNAME mailadmin
+MYSQL_PASSWORD newpassword
+MYSQL_PORT 0
+MYSQL_DATABASE mail
+MYSQL_USER_TABLE mailbox
+MYSQL_CRYPT_PWFIELD password
+MYSQL_UID_FIELD 5000
+MYSQL_GID_FIELD 5000
+MYSQL_LOGIN_FIELD username
+MYSQL_HOME_FIELD "/home/vmail"
+MYSQL_MAILDIR_FIELD CONCAT(SUBSTRING_INDEX(username,'@',-1),'/',SUBSTRING_INDEX(username,'@',1),'/')
+</file>
+
+==== Configure Courier to user our certificates ====
+
+  nano /etc/courier/imapd-ssl
+
+and change values of TLS_CERTFILE and TLS_TRUSTCERTS to
+
+  TLS_CERTFILE=/etc/ssl/self-signed/server.pem
+  TLS_TRUSTCERTS=/etc/ssl/self-signed/server.crt
+
+To restart Courier you have to restart couple of services
+
+  /etc/init.d/courier-authdaemon restart
+  /etc/init.d/courier-imap restart
+  /etc/init.d/courier-imap-ssl restart
+
+And if you have installed POP3 as well
+
+  /etc/init.d/courier-pop restart
+  /etc/init.d/courier-pop-ssl restart
