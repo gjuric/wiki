@@ -351,6 +351,7 @@ Now, we are going to create a configuration file for out example.com domain. Cre
 
         ServerAdmin webmaster@example.com
         ServerName example.com
+        ServerAlias www.example.com
 
         DocumentRoot /home/www/example.com/public_html
 
