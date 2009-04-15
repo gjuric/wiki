@@ -513,6 +513,7 @@ Run awstats
 
   /usr/lib/cgi-bin/awstats.pl -update -config=default
 
+<del>
 edit ''/etc/apache2/sites-available/default'' and add
 
 <file>
@@ -526,6 +527,17 @@ Order allow,deny
 Allow from all
 </Directory>
 </file>
+</del>
+
+Awstats package has created a cron job that should generate logs for awstats regularly, but it doesn't fit our needs, so we are going to edit it, open ''/etc/cron.d/awstats'' and replace
+
+  0,10,20,30,40,50 * * * * www-data [ -x /usr/lib/cgi-bin/awstats.pl -a -f /etc/awstats/awstats.conf -a -r /var/log/apache/access.log ] && /usr/lib/cgi-bin/awstats.pl -config=awstats -update >/dev/null
+
+with an entry for every one of our domains
+
+  0,10,20,30,40,50 * * * * www-data /usr/lib/cgi-bin/awstats.pl -config=default -update >/dev/null
+
+
 
 === Configure HTTPS ===
 
