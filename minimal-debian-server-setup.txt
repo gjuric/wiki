@@ -503,6 +503,29 @@ You can also read your statistics for 'default' with URL:
 Press ENTER to finish...
 </code>
 
+  nano /etc/awstats/awstats.default.conf
+
+change LogFile= to
+
+  LogFile="/var/log/apache2/access.log"
+
+Run awstats
+
+  /usr/lib/cgi-bin/awstats.pl -update -config=default
+
+edit ''/etc/apache2/sites-available/default'' and add
+
+<file>
+# Awstats specific
+
+Alias /icon/ /usr/share/awstats/icon/
+<Directory /usr/share/awstats/icon>
+Options None
+AllowOverride None
+Order allow,deny
+Allow from all
+</Directory>
+</file>
 
 === Configure HTTPS ===
 
