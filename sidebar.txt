@@ -1,1 +1,7 @@
-testing
+====== Linux ======
+
+  * [[Minimal Debian server setup]]
+
+====== Croatian ======
+
+  * [[hr:Debian]]
