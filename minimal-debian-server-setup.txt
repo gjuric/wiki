@@ -232,7 +232,7 @@ In case you don't get your prompt back, you did something wrong. Connect to the 
 
 You can now check your rules by using ''iptables -L -n'' and they should not be empty anymore.
 
-The problem is, that if you reboot your server now, all of the rules would be lost, so we have to make sure they are applied whenever our server is rebooted.
+The problem is that if you reboot your server now zou will lost all iptables rules. We have apply these rules whenever our server is rebooted.
 
 The script populated the rules, but it also created a file called iptables.rules in our /root directory.
 
@@ -250,7 +250,7 @@ Reboot your server with
 
   reboot
 
-and when it comes up again log in and check your iptables rules againg with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
+and when it comes back up log in and check your iptables rules again with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
 
 ===== Configuring NTP =====
 
