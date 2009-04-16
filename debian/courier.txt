@@ -1,4 +1,5 @@
 ====== Courier ======
+===== Installation =====
 
 To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you can run:
 
