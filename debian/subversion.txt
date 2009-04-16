@@ -1,0 +1,99 @@
+====== Subversion ======
+
+Subversion is currently the most popular version control system. We will show you how to setup Subversion on you server in no time.
+
+  apt-get install subversion subversion-tools
+
+I choose to store all of my Subversion repositories inside ''/home/svn'' where every project has its own folder. 
+
+Create user and group called svn with a home directory in ''/home/svn'' that can not log in on the sysem
+
+  mkdir /home/svn
+  adduser --system --group --home /home/svn --no-create-home --disabled-login svn
+  chown -R svn:svn /home/svn/
+
+To create a new repository named ''project1'' enter:
+
+  svnadmin create /home/svn/project1
+
+To be able to access the repository from another computer we need to setup ''svnserve''.
+
+Create a new file ''/etc/init.d/svnserve'' and paste this into it:
+
+<file>
+#!/bin/sh -e
+### BEGIN INIT INFO
+# Provides:          subversion 
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/stop subversion server
+### END INIT INFO
+#
+# svnserve - brings up the svn server so anonymous users can access svn
+#
+
+# Get LSB functions
+. /lib/lsb/init-functions
+. /etc/default/rcS
+
+SVNSERVE=/usr/bin/svnserve
+SVN_USER=svn
+SVN_GROUP=svn
+SVN_REPO_PATH=/home/$SVN_USER/
+
+# Check that the package is still installed
+[ -x $SVNSERVE ] || exit 0;
+
+case "$1" in
+        start)
+                log_begin_msg "Starting svnserve..."
+                umask 002
+                if start-stop-daemon --start \
+                --chuid $SVN_USER:$SVN_GROUP \
+                --exec $SVNSERVE \
+                -- -d -r $SVN_REPO_PATH; then
+                        log_end_msg 0
+                else
+                        log_end_msg $?
+                fi
+        ;;
+
+        stop)
+                log_begin_msg "Stopping svnserve..."
+                if start-stop-daemon --stop --exec $SVNSERVE; then
+                log_end_msg 0
+                else
+                log_end_msg $?
+                fi
+        ;;                                                    
+
+        restart|force-reload)
+                "$0" stop && "$0" start
+        ;;
+
+        *)
+        e       cho "Usage: /etc/init.d/svnserve {start|stop|restart|force-reload}"
+                exit 1
+        ;;
+esac
+
+exit 0
+</file>
+
+Make the script executable
+
+  chmod +x /etc/init.d/svnserver
+
+This is our init script for starting Subversion server. Since we want this script to run on every boot, we need to add it to the default run levels
+
+  update-rc.d svnserve defaults
+
+Run the Subversion server
+
+  update-rc.d svnserve start
+
+Change the firewall so we accept incoming connections on port 3609.
+
+You can now checkout your repository from another machine using ''svn co svn://atlantis.example.com/project1''.
