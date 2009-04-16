@@ -1,0 +1,32 @@
+====== Webmail ======
+
+==== Install Roundcube ====
+
+We will install roundcube to the /var/www folder. This way, when somebody enters mail.somedomain-we-host.com they will see Roundcube.
+
+Download Roundcube, uncompress the archive, and copy all the files to the /var/www folder.
+
+Make folder ''temp'' and ''logs'' writable by the web server.
+
+  chown www-data:www-data /var/www/temp
+  chown www-data:www-data /var/www/logs
+
+Enter MySQL with
+
+  mysql -u root -p
+
+create database and user for Roundcube (chen ''newpassword'' to something else).
+
+  CREATE DATABASE ROUNDCUBE;
+  CREATE USER 'rounducbe'@'localhost' IDENTIFIED BY 'newpasswd';
+  FLUSH PRIVILEGES;
+  GRANT ALL PRIVILEGES ON roundcube.* TO 'roundcube'@'localhost';
+  FLUSH PRIVILEGES;
+
+Exit MySQL and populate the database with initial tables
+
+   mysql -p roundcube < /var/www/SQL/mysql.initial.sql
+
+Point your browser to http//YOUR-IP-ADDRESS/installer 
+
+When prompted for configuration options enter select ''many identities with possibility to edit all params but not email address'' and select ''Use the current IMAP username and password for SMTP authentication''. Fill in the database info. Other options you can figure out for yourself.
