@@ -2,6 +2,7 @@
 
 Detailed How To on setting up a Debian Lenny server setup. Instructions include setting up Firewall, LAMP stack, mail server based on Postfix and Courier with anti spam and anti virus measures. Ideal for private VPS solutions.
 
+
   - [[Debian:Installation]]
     - [[Debian:Essential software]]
     - [[Debian:Static IP address]]
@@ -18,6 +19,7 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Debian:Dns records]]
     - [[Debian:Postfix]]
     - [[Debian:Courier]]
+    - [[Debian:Anti-spam & Anti-virus]]
     - [[Debian:Webmail]]
   - Other services
     - [[Subversion]]
