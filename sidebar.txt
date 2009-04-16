@@ -1,6 +1,6 @@
 ====== Linux ======
 
-  * [[Minimal Debian server setup]]
+  * [[Debian]]
 
 ====== Croatian ======
 
