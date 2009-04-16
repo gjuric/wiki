@@ -5,6 +5,7 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
   - [[Debian:Installation]]
     - [[Debian:Essential software]]
     - [[Debian:Static IP address]]
+    - [[Debian:Time synchronization]]
   - [[Debian:Security]]
     - [[Debian:Firewall]]
     - [[Debian:Intrusion detection]]
