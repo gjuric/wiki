@@ -17,3 +17,6 @@
     - [[Debian:Postfix]]
     - [[Debian:Courier]]
     - [[Debian:Webmail]]
+  - Other services
+    - [[Subversion]]
+    - [[Redmine]]
