@@ -1,0 +1,144 @@
+====== Anti-spam and Anti-virus ======
+
+
+This part is taken from https://help.ubuntu.com/community/PostfixAmavisNew
+
+Install Amavis, Clamav and SpamAssassin
+
+  apt-get install amavisd-new spamassassin clamav-daemon
+
+Note: libnet-dns-perl libmail-spf-query-perl pyzor razor are installed as dependencies.
+
+Add **contrib** and **non-free** repositories by editing ''/etc/apt/sources.list'' and append " contrib non-free" on every line that starts with deb, and ends with main. You should be looking at something like this:
+
+<file>
+# deb http://ftp.carnet.hr/debian/ lenny main
+
+deb http://ftp.carnet.hr/debian/ lenny main contrib non-free
+deb-src http://ftp.carnet.hr/debian/ lenny main
+
+deb http://security.debian.org/ lenny/updates main contrib non-free
+deb-src http://security.debian.org/ lenny/updates main
+
+deb http://volatile.debian.org/debian-volatile lenny/volatile main contrib non-free
+deb-src http://volatile.debian.org/debian-volatile lenny/volatile main
+</file>
+
+After editing ''sources.list'' run
+
+  apt-get update
+
+Now, we can install utilities for compression and decompression of archives
+
+  apt-get install arj bzip2 cabextract cpio file gzip lha nomarch pax rar unrar unzip zip zoo
+
+Add clamav user to the amavis group and vice versa in order for Clamav to have access to scan files:
+
+  adduser clamav amavis
+  adduser amavis clamav
+
+Enable SpamAssassin by editing ''/etc/default/spamassassin'' and setting
+
+  ENABLED=1
+
+and start SpamAssassin with
+
+  invoke-rc.d spamassassin start
+
+Edit ''/etc/amavis/conf.d/15-content_filter_mode'' and ucomment antivirus and spam checking
+
+<file>
+use strict;
+
+# You can modify this file to re-enable SPAM checking through spamassassin
+# and to re-enable antivirus checking.
+
+#
+# Default antivirus checking mode
+# Uncomment the two lines below to enable it back
+#
+
+@bypass_virus_checks_maps = (
+   \%bypass_virus_checks, \@bypass_virus_checks_acl, \$bypass_virus_checks_re);
+
+
+#
+# Default SPAM checking mode
+# Uncomment the two lines below to enable it back
+#
+
+@bypass_spam_checks_maps = (
+   \%bypass_spam_checks, \@bypass_spam_checks_acl, \$bypass_spam_checks_re);
+
+1;  # ensure a defined return
+</file>
+
+Bouncing spam can be a bad idea as the return address is often faked, so it may have your server put on a blacklist. Edit /etc/amavis/conf.d/20-debian_defaults and change:
+
+  $final_spam_destiny       = D_PASS;
+
+Bouncing spam is not a good idea. I suggest you also change default spam levels and lover them at a later time if you start getting to much spam:
+
+  $sa_spam_subject_tag = '***SPAM*** ';
+  $sa_tag_level_deflt  = 6.0;  # add spam info headers if at, or above that level
+  $sa_tag2_level_deflt = 10; # add 'spam detected' headers at that level
+  $sa_kill_level_deflt = 10; # triggers spam evasive actions
+  $sa_dsn_cutoff_level = 10;   # spam level beyond which a DSN is not sent
+
+Configuring other options (including SpamAssasing are currently out of scope for this document).
+
+Change the permissions on ''/var/lib/amavis/tmp''
+
+  chmod -R 775 /var/lib/amavis/tmp
+
+After configuration Amavis needs to be restarted:
+
+sudo /etc/init.d/amavis restart
+
+To integrate Amavis with Postfix we need to add the ''content_filter'' in ''/etc/postfix/main.cf''
+
+  content_filter = smtp-amavis:[127.0.0.1]:10024
+
+
+Open ''/etc/postfix/master.cf'' and add this at the end of the file:
+
+<file>
+smtp-amavis     unix    -       -       -       -       2       smtp
+        -o smtp_data_done_timeout=1200
+        -o smtp_send_xforward_command=yes
+        -o disable_dns_lookups=yes
+        -o max_use=20
+
+127.0.0.1:10025 inet    n       -       -       -       -       smtpd
+        -o content_filter=
+        -o local_recipient_maps=
+        -o relay_recipient_maps=
+        -o smtpd_restriction_classes=
+        -o smtpd_delay_reject=no
+        -o smtpd_client_restrictions=permit_mynetworks,reject
+        -o smtpd_helo_restrictions=
+        -o smtpd_sender_restrictions=
+        -o smtpd_recipient_restrictions=permit_mynetworks,reject
+        -o smtpd_data_restrictions=reject_unauth_pipelining
+        -o smtpd_end_of_data_restrictions=
+        -o mynetworks=127.0.0.0/8
+        -o smtpd_error_sleep_time=0
+        -o smtpd_soft_error_limit=1001
+        -o smtpd_hard_error_limit=1000
+        -o smtpd_client_connection_count_limit=0
+        -o smtpd_client_connection_rate_limit=0
+        -o receive_override_options=no_header_body_checks,no_unknown_recipient_checks
+</file>
+
+and add this immediately below the "pickup" transport service:
+
+<code>
+         -o content_filter=
+         -o receive_override_options=no_header_body_checks
+</code>
+
+This will prevent messages that are generated to report on spam from being classified as spam. 
+
+Restart Postfix:
+
+  /etc/init.d/postfix restart
