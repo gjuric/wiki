@@ -1,0 +1,218 @@
+====== Apache ======
+
+We are going to use Apache mod_php for running PHP scripts so we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
+
+  apt-get install apache2 apache2-mpm-prefork apache2-utils ssl-cert
+
+mod_rewrite is not enabled by default so we will enable it and restart Apache
+
+  a2enmod rewrite
+  invoke-rc.d apache2 restart
+
+Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see "It works!" displayed in your browser if Apache is working normaly.
+
+If you can not access the page, check your firewall rules that the port 80 is open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
+
+===== Configure Virtual Hosts =====
+
+Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]].
+
+Configuration files for sites that Apache server are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are located in ''/etc/apache2/sites-enabled''.
+
+Now, we are going to create a configuration file for out example.com domain. Create an example.com in ''/etc/apache2/sites-available'' using ''nano /etc/apache2/sites-available/example.com'' and save this in the file:
+
+<file>
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@example.com
+        ServerName example.com
+        ServerAlias www.example.com
+
+        DocumentRoot /home/www/example.com/public_html
+
+        ErrorLog /home/www/example.com/logs/error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /home/www/example.com/logs/access.log combined
+</VirtualHost>
+</file>
+
+You can see that the DocumentRoot points to ''/home/www/...''. This is because I choose to save all my sites in the ''/home/www'' folder in which where every domain has its own folder.
+
+Since those folders for our domain still don't exist, we need to create them
+
+  mkdir /home/www
+  mkdir /home/www/example.com
+  mkdir /home/www/example.com/logs
+  mkdir /home/www/example.com/public_html
+
+As you can see, we can tell Apache to save log files for each virtual host separately.
+
+Od Debian systems Apache runs as user www-data. So we need to give permissions to Apache to read and write to this folders. We can change the owner and the group of all files with
+
+  chown www-data:www-data -R /home/www/
+
+We are ready to enable our new virtual host
+
+  a2ensite example.com
+  update-rc.d apache2 restart
+
+If you want to add other sites to your server, just create another file in the ''/etc/apache2/sites-available'' folder and repeat the procedure.
+
+===== Apache configuration =====
+
+Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable thiso pen /etc/apache2/conf.d/security with nano and replace
+
+  ServerTokens Full
+  ServerSignature On
+
+with 
+
+  ServerTokens Prod
+  ServerSignature Off
+
+All application on my web server use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
+
+All that is left to do, is to restart Apache
+
+  update-rc.d apache2 restart
+
+===== Rotate logs for virtual domains =====
+
+Since log files for every domain Apache serves is located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
+
+... TODO ...
+
+===== Install and configure Awstats =====
+
+  apt-get install awstats gzip
+
+Configure awstats
+
+  cd /usr/share/doc/awstats/examples/
+  gunzip gunzip awstats.model.conf.gz
+  cp awstats.model.conf /etc/awstats/
+  mkdir wwwroot
+  mkdir wwwroot/cgi-bin
+  cp awstats.model.conf wwwroot/cgi-bin/
+  perl awstats_configure.pl
+
+Copying ''awstats.model.con'' to ''/etc/awstats/'' is needed because this file is referenced from the ''awstats_configure.pl'' script, but somebody forgot to put it there when they were packaging awstats for Debian.
+
+<code>
+atlantis:/usr/share/doc/awstats/examples# perl awstats_configure.pl
+
+----- AWStats awstats_configure 1.0 (build 1.7) (c) Laurent Destailleur -----
+This tool will help you to configure AWStats to analyze statistics for
+one web server. You can try to use it to let it do all that is possible
+in AWStats setup, however following the step by step manual setup
+documentation (docs/index.html) is often a better idea. Above all if:
+- You are not an administrator user,
+- You want to analyze downloaded log files without web server,
+- You want to analyze mail or ftp log files instead of web log files,
+- You need to analyze load balanced servers log files,
+- You want to 'understand' all possible ways to use AWStats...
+Read the AWStats documentation (docs/index.html).
+
+-----> Running OS detected: Linux, BSD or Unix
+Warning: AWStats standard directory on Linux OS is '/usr/local/awstats'.
+If you want to use standard directory, you should first move all content
+of AWStats distribution from current directory:
+/usr/share/doc/awstats/examples
+to standard directory:
+/usr/local/awstats
+And then, run configure.pl from this location.
+Do you want to continue setup from this NON standard directory [yN] ? y
+
+-----> Check for web server install
+
+Enter full config file path of your Web server.
+Example: /etc/httpd/httpd.conf
+Example: /usr/local/apache2/conf/httpd.conf
+Example: c:\Program files\apache group\apache\conf\httpd.conf
+Config file path ('none' to skip web server setup):
+> /etc/apache2/apache2.conf
+
+-----> Check and complete web server config file '/etc/apache2/apache2.conf'
+
+-----> Need to create a new config file ?
+Do you want me to build a new AWStats config/profile
+file (required if first install) [y/N] ? y
+
+
+-----> Define config file name to create
+What is the name of your web site or profile analysis ?
+Example: www.mysite.com
+Example: demo
+Your web site, virtual server or profile name:
+> default
+
+-----> Define config file path
+In which directory do you plan to store your config file(s) ?
+Default: /etc/awstats
+Directory path to store config file(s) (Enter for default):
+>
+
+-----> Create config file '/etc/awstats/awstats.default.conf'
+ Config file /etc/awstats/awstats.default.conf created.
+
+-----> Add update process inside a scheduler
+Sorry, configure.pl does not support automatic add to cron yet.
+You can do it manually by adding the following command to your cron:
+/usr/share/doc/awstats/examples/wwwroot/cgi-bin/awstats.pl -update -config=default
+Or if you have several config files and prefer having only one command:
+/usr/share/doc/awstats/examples/tools/awstats_updateall.pl now
+Press ENTER to continue...
+
+
+A SIMPLE config file has been created: /etc/awstats/awstats.default.conf
+You should have a look inside to check and change manually main parameters.
+You can then manually update your statistics for 'default' with command:
+> perl awstats.pl -update -config=default
+You can also read your statistics for 'default' with URL:
+> http://localhost/awstats/awstats.pl?config=default
+
+Press ENTER to finish...
+</code>
+
+  nano /etc/awstats/awstats.default.conf
+
+change LogFile= to
+
+  LogFile="/var/log/apache2/access.log"
+
+Run awstats
+
+  /usr/lib/cgi-bin/awstats.pl -update -config=default
+
+<del>
+edit ''/etc/apache2/sites-available/default'' and add
+
+<file>
+# Awstats specific
+
+Alias /icon/ /usr/share/awstats/icon/
+<Directory /usr/share/awstats/icon>
+Options None
+AllowOverride None
+Order allow,deny
+Allow from all
+</Directory>
+</file>
+</del>
+
+Awstats package has created a cron job that should generate logs for awstats regularly, but it doesn't fit our needs, so we are going to edit it, open ''/etc/cron.d/awstats'' and replace
+
+  0,10,20,30,40,50 * * * * www-data [ -x /usr/lib/cgi-bin/awstats.pl -a -f /etc/awstats/awstats.conf -a -r /var/log/apache/access.log ] && /usr/lib/cgi-bin/awstats.pl -config=awstats -update >/dev/null
+
+with an entry for every one of our domains
+
+  0,10,20,30,40,50 * * * * www-data /usr/lib/cgi-bin/awstats.pl -config=default -update >/dev/null
+
+
+===== Configure HTTPS =====
+
+.... TODO ....
