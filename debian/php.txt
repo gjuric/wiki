@@ -37,7 +37,7 @@ Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a 
 
   rm /var/www/i.php
 
-===== PHP configuration =====
+===== Configuration =====
 
 If you view your sites response headers (you can us WebDeveloper Toolbar for Firefox) you will see something like this:
 
