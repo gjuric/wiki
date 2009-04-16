@@ -1,0 +1,78 @@
+====== PHP ======
+
+To install PHP and mod_php module for Apache you have to run
+
+  apt-get install libapache2-mod-php5 php5 php5-common php5-curl php5-dev //
+  php5-gd php-pear php5-imagick php5-imap php5-mcrypt php5-mhash php5-mysql //
+  php5-pspell php5-recode php5-sqlite php5-tidy php5-xmlrpc php5-xsl php-apc imagemagick
+
+If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
+
+php5-pspell installs aspell for spell checking purposes, which install aspell-en dictionary. If you need some other dictionaries for your PHP applications install them as well.
+
+To check for available language dictionaries type:
+
+  apt-cache search aspell-
+
+A need Croation dictionary so I have to install it:
+
+  apt-get install aspell-hr
+
+Now it is time to restart the Apache server
+
+  invoke-rc.d apache2 restart
+
+By default, Apache server files from the /var/www folder on your server (we will change this later). To check if PHP is installed, create a new file using nano:
+
+  nano /var/www/i.php
+
+and inside enter: 
+
+<file>
+<?php phpinfo();
+</file>
+
+Try to open http://YOUR-IP-ADDRESS/i.php with your browser and you should see a PHP Info page. Remove the i.php file since exposing information about your web server to everyone is not a good idea:
+
+  rm /var/www/i.php
+
+===== PHP configuration =====
+
+If you view your sites response headers (you can us WebDeveloper Toolbar for Firefox) you will see something like this:
+
+  Date: Mon, 13 Apr 2009 15:45:03 GMT
+  Server: Apache/2.2.9 (Debian) PHP/5.2.6-1+lenny2 with Suhosin-Patch
+  X-Powered-By: PHP/5.2.6-1+lenny2
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 10251
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+
+  200 OK
+
+While we got rid of the ''Server:'' exposing PHP version, we also want to remove X-Powered-By header.
+
+Open /etc/php5/apache2/php.ini and change
+
+  expose_php = On
+
+to 
+
+  expose_php = Off
+
+While you are in the php.ini file change ''magic_quotes_gpc = On'' to ''magic_quotes_gpc = Off''. I don't know why but Debian still ships PHP with magic quotes set to On.
+
+Reboot the Apache web server and check the response headers. Now you should see something like this:
+
+  Date: Mon, 13 Apr 2009 15:57:43 GMT
+  Server: Apache
+  Vary: Accept-Encoding
+  Content-Encoding: gzip
+  Content-Length: 9920
+  Keep-Alive: timeout=15, max=99
+  Connection: Keep-Alive
+  Content-Type: text/html
+  
+  200 OK
