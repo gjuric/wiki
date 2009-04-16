@@ -1,5 +1,0 @@
-[[Debian]]
-  - [[Debian:Installation]]
-  - [[Debian:Essential software]]
-  - [[Static IP address]]
-  - Security
