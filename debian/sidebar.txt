@@ -3,6 +3,7 @@
   - [[Debian:Installation]]
     - [[Debian:Essential software]]
     - [[Debian:Static IP address]]
+    - [[Debian:Time synchronization]]
   - [[Debian:Security]]
     - [[Debian:Firewall]]
     - [[Debian:Intrusion detection]]
