@@ -1,0 +1,185 @@
+====== Firewall ======
+
+We are going to secure our web server using [[http://en.wikipedia.org/wiki/Iptables|iptables]] as a firewall.
+
+  apt-get install iptables
+
+If you check iptables rules with ''iptables -L'' you should see a clean chain list:
+
+  example:~# iptables -L
+  Chain INPUT (policy ACCEPT)
+  target     prot opt source               destination
+  
+  Chain FORWARD (policy ACCEPT)
+  target     prot opt source               destination
+  
+  Chain OUTPUT (policy ACCEPT)
+  target     prot opt source               destination
+
+To help us set up iptables rules we are going to use a modified version of a firewall script that is used for setting up QmailToaster on CentOS, the script looks like this:
+<file>
+#!/bin/sh
+#
+# Fedora Core 2
+# Nick Hemmesch <nick@ndhsoft.com>
+# June 2, 2004
+#
+# Customised for Debian/Ubuntu by Goran Juric, April 14, 2009.
+
+## Set your IP address
+MYIP="YOUR-IP-ADDRESS"
+ROUTER="IP-ADDRESS-THAT-BYPASSES-FIREWALL-RULES" 
+#
+## Flush rules & reset counters
+iptables -F
+iptables -X
+#
+## Set policies
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP
+#
+## Drop all incoming fragments
+iptables -A INPUT -i eth0 -f -j DROP
+#
+## Drop outside packets with local addresses - anti-spoofing measure
+iptables -A INPUT -s $MYIP -i ! lo -j DROP
+iptables -A INPUT -s 127.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 10.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 192.168.0.0/16 -i ! lo -j DROP
+iptables -A INPUT -s 224.0.0.0/4 -i ! lo -j DROP
+iptables -A INPUT -s 0.0.0.0/8 -i ! lo -j DROP
+iptables -A INPUT -s 255.255.255.255 -i ! lo -j DROP
+iptables -A INPUT -s 169.254.0.0/16 -i ! lo -j DROP
+iptables -A INPUT -s 221.240.102 -i ! lo -j DROP
+iptables -A INPUT -s 203.215.94.193 -i ! lo -j DROP
+iptables -A INPUT -s 218.71.137.68 -i ! lo -j DROP
+#
+## Pass all locally-originating packets
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+#
+## Accept ICMP ping echo requests
+## (this allows other people to ping your machine, among other things),
+iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
+#
+## Accept all traffic from a specific machine with IP specified in the ROUTER variable
+# Traffic coming from the company router (address of the clients behind NAT)
+#iptables -A INPUT -p tcp -m tcp --syn -s $ROUTER -j ACCEPT
+#
+## Accept traffic on port p from a specific machine with IP x.x.x.x
+## replace p with the desired port number, and replace x.x.x.x with
+## the desired IP, then uncomment the line.
+#iptables -A INPUT -p tcp -m tcp --syn -s x.x.x.x --dport p -j ACCEPT
+#
+## Accept ftp-data and ftp (ports 20 & 21)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 20 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp --syn --dport 21 -j ACCEPT
+#
+## Accept ssh (port 22)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 22 -j ACCEPT
+#
+## Accept telnet (port 23)
+##iptables -A INPUT -p tcp -m tcp --syn --dport 23 -j ACCEPT
+#
+## Accept smtp (port 25 | 587)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 25 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp --syn --dport 587 -j ACCEPT
+#
+## Accept dns (port 53)
+#iptables -A INPUT -p udp -m udp -s 0/0 --dport 53 -d 0/0 -j ACCEPT
+#iptables -A INPUT -p tcp -m tcp -s 0/0 --dport 53 -d 0/0 -j ACCEPT
+#
+## Accept http (port 80)
+iptables -A INPUT -p tcp -m tcp --syn --dport 80 -j ACCEPT
+#
+## Accept pop3 (port 110)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 110 -j ACCEPT
+#
+## Accept pop3s (port 995)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 995 -j ACCEPT
+#
+## Accept inbound identd (port 113)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 113 -j ACCEPT
+## or you can reject and send back a TCP RST packet instead
+#iptables -A INPUT -p tcp -m tcp --dport 113 -j REJECT --reject-with tcp-reset
+#
+## Accept imap (port 143)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 143 -j ACCEPT
+## Accept imaps (port 993)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 993 -j ACCEPT
+#
+## Accept https (port 443)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 443 -j ACCEPT
+#
+## Accept smtps (port 465)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 465 -j ACCEPT
+## Accept msp (port 587)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 587 -j ACCEPT
+#
+## Accept SpamAssassin (port 783)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 783 -j ACCEPT
+#
+## Accept imaps (port 993)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 993 -j ACCEPT
+#
+## Accept pop3s (port 995)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 995 -j ACCEPT
+#
+## Accept mysql (port 3306)
+#iptables -A INPUT -p tcp -m tcp --syn --dport 3306 -j ACCEPT
+#
+## Allow inbound established and related outside communication
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+#
+## Drop outside initiated connections
+iptables -A INPUT -m state --state NEW -j REJECT
+#
+## Allow all outbound tcp, udp, icmp traffic with state
+iptables -A OUTPUT -p tcp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p udp -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+## Save rules
+#
+#service iptables save#
+iptables-save > iptables.rules
+#
+echo ""
+echo "Check your rules - iptables -L -n"
+echo ""
+</file>
+
+There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I want to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
+
+The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
+
+If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. If that is the case, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box ([[http://en.wikipedia.org/wiki/Port_knocking|port knocking]]) but they are out of the scope of this article.
+
+Copy the script to /root/firewall.sh , cd into the /root directory and run
+
+  sh ./firewall.sh
+
+In case you don't get your prompt back, you did something wrong. Connect to the server, reboot it and try again.
+
+You can now check your rules by using ''iptables -L -n'' and they should not be empty anymore.
+
+The problem is that if you reboot your server now zou will lost all iptables rules. We have apply these rules whenever our server is rebooted.
+
+The script populated the rules, but it also created a file called iptables.rules in our /root directory.
+
+We are going to copy this file to the /etc/network folder.
+
+  cp /root/iptables.rules /etc/network/
+
+Now we need to edit the /etc/network/interfaces file. Use nano to open it and add
+
+  pre-up iptables-restore < /etc/network/iptables.rules
+
+after the configuration options for your network interface. This line will make sure that before network interface is initialized the rules will be loaded into iptables.
+
+Reboot your server with
+
+  reboot
+
+and when it comes back up log in and check your iptables rules again with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
