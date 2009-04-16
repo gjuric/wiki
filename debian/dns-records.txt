@@ -1,0 +1,51 @@
+====== DNS records ======
+
+Note: Server in this example is named atlantis.example.com. 
+
+First, we need to check our hostname
+
+  atlantis:~# hostname -f
+  atlantis.diabmon.com
+
+If hostname did not return FQDN of your server edit ''/etc/hosts''. You should see something like this, if not, change according to your IP address and server name.
+
+  127.0.0.1         localhost
+  YOUR-IP-ADDRESS   atlantis.example.com
+
+Now check your ''/etc/hostname'' file:
+
+  atlantis.example.com
+
+Change the names to match your server name and reboot the server. Run ''hostname -f'' again and you should see ''atlantis.example.com''.
+
+Now, we need to check that our DNS servers have an MX record for our example.com domain. Install DNS utilities:
+
+  apt-get install dnsutils
+
+We are going to use ''host'' to check information about our domain:
+
+  atlantis:~# host example.com
+  example.com has address YOUR-IP-ADDRESS
+  example.com mail is handled by 0 mail.example.com.
+
+We can see, that the mail for our domain is handled by mail.example.com. Now we must make sure that mail.example.com point to the same address as our server (atlantis.example.com).
+
+  atlantis:~# nslookup mail.example.com
+  Server:         YOUR-DNS-SERVER
+  Address:        YOUR-DNS-ADDRESS#53
+
+  Non-authoritative answer:
+  mail.example.com        canonical name = example.com.
+  Name:   diabmon.com
+  Address: YOUR-IP-ADDRESS
+
+It would be also nice if your reverse DNS points to the same name (atlantis.example.com)
+
+  atlantis:~# nslookup YOUR-IP-ADDRESS
+  Server:         YOUR-DNS-SERVER
+  Address:        YOUR-DNS-SERVER#53
+  
+  Non-authoritative answer:
+  YOUR-IP-ADDRES-REVERSE.in-addr.arpa      name = atlantis.example.com.
+
+If they do not match. Ask your ISP to change this for you.
