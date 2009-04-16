@@ -1,0 +1,5 @@
+====== MySQL ======
+
+  apt-get install mysql-server mysql-client
+
+A advise you to set a password for root user.
