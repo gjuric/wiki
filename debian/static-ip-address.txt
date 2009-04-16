@@ -1,0 +1,29 @@
+
+====== Static IP address ======
+
+In case your server is connected to a network which broadcasts DHCP you didn't get a chance to configure a static IP address for your server.
+
+Enter ''ifconfig'' and copy the output somewhere so you have access to network information you got from a DHCP server.
+
+Open up /etc/network/interfaces with nano and replace 
+
+  auto eth0
+  iface eth0 inet dhcp
+
+with
+
+  iface eth0 inet static
+        address YOUR-IP
+        netmask YOUR-NETMASK
+        network YOUR-NETWORK
+        broadcast YOUR-BROADCAST
+        gateway YOUR-GATEWAY
+        # dns-* options are implemented by the resolvconf package, if installed
+        dns-nameservers YOUR-DNS-SERVERS-SEPARATED-BY-SPACE
+        dns-search YOUR-DOMAIN
+  
+Reboot your server, check that your internet connection is working (try to ping google.com or some other host) and if everything is ok you can remove dhcp3-* packages from your system.
+
+  apt-get --purge remove dhcp3-common dhcp3-client
+
+Note that option --purge removes configuration files of the packages we are removing. If you do not use --purge they will be left on your system.
