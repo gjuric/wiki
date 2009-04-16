@@ -1,0 +1,11 @@
+====== LAMP ======
+
+Installing MySQL, Apache and PHP on Debian systems is a breeze. But before installation of this packages we are going to install Postfix MTA because otherwise MySQL will install exim4 as a default MTA on our system (currently we don't have an MTA because we are running a minimal install server).
+
+If you do not plan to run mail server on this machine, skip installing Postfix.
+
+  apt-get install postfix bsd-mailx
+
+If you plan to setup your own mail server on the same server choose Internet site. If not, you can just select Local only. Since I plan to install a mail server on the same machine I am choosing Internet site.
+
+For the System mail name enter your servers name including the domain (atlantis.example.com).
