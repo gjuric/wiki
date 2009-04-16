@@ -1,0 +1,429 @@
+====== Postfix ======
+
+If you haven't already installed Postfix, do it now:
+
+  apt-get install postfix telnet mailx
+
+Note: we are also installing telnet so we can easily check if everything is going well during the installation and configuration. As well as mailx package so we can send emails from the terminal using the ''mail'' command.
+
+During installation Postfix will ask you to choose the type of installation and a domain. Choose **Internet site** and enter your servers name **atlantis.example.com**. It is important that your server name is not just **example.com**.
+
+After installation finishes check if Postfix is runing by connecting to port 25 on your localhost with telnet:
+
+  # telnet localhost 25
+  Trying 127.0.0.1...
+  Connected to localhost.
+  Escape character is '^]'.
+  220 diabmon.com ESMTP Postfix (Debian/GNU)
+
+Note: Type **quit** to exit.
+
+If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your other email account:
+
+  mail your-other-email@somedomain.com
+
+  Subject: test email from example.com
+  test body of the email.
+  .
+  Cc:
+
+You should be getting this email message on the account you specified.
+
+Check that you have your ''example.com'' in a file ''/etc/mailname''
+
+Open ''/etc/postfix/main.cf'', it should look something like this:
+
+<file>
+# See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+
+# Debian specific:  Specifying a file name will cause the first
+# line of that file to be used as the name.  The Debian default
+# is /etc/mailname.
+#myorigin = /etc/mailname
+
+smtpd_banner = $myhostname ESMTP $mail_name (Debian/GNU)
+biff = no
+
+# appending .domain is the MUA's job.
+append_dot_mydomain = no
+
+# Uncomment the next line to generate "delayed mail" warnings
+#delay_warning_time = 4h
+
+readme_directory = no
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
+# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+# information on enabling SSL in the smtp client.
+
+myhostname = atlantis.example.com
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+myorigin = /etc/mailname
+mydestination = atlantis.example.com, localhost.example.com, localhost
+relayhost =
+mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = all
+</file>
+
+
+If your hostname is something like atlantis.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
+
+  myorigin = $mydomain
+
+and ''mydestination = atlantis.example.com, localhost.example.com, localhost'' to 
+
+  mydestination = $mydomain, localhost.$mydomain, localhost
+
+If your hostname is just example.com doing this will set your origin to just ''.com''. Postfix extract $mydomain from the value of the myhostname and strips the part before the first dot, including the dot.
+
+You can also remove IPV6 notation from the mynetworks and leave just ''mynetworks = 127.0.0.0/8''.
+
+Restart Postfix
+
+  invoke-rc.d postfix restart
+
+and try to send another test mail to check that we didn't mess something up.
+
+Now it would be a good time to also test if Postfix is receiving mails as well. Try sending an email to just ''root'' and to ''root@example.com''. The received email should be located in a file ''/var/mail/root''. Check that file and make sure that you are sending email from the right domain (sender should be root@example.com). If you do not receive an email check the Postifx log file ''/var/log/mail.log'' to see what went wrong.
+
+===== Postfix virtual user =====
+
+First we need to create a **vmail** user and group (with ID 5000) on the system. This is a system user who will store all of our email messages.
+
+  groupadd -g 5000 vmail
+  useradd -s /usr/sbin/nologin -g vmail -u 5000 vmail -d /home/vmail -m
+
+It is important that the vmail user can not login and belongs to vmail group. We are also creating a /home/vmail folder. It is going to hold all of the messages on our mail server.
+
+===== Postfix and MySQL =====
+
+Not, it is time to install some more packages
+
+  apt-get install postfix postfix-mysql mysql-server postfix-tls libsasl2-2 libsasl2-modules libsasl2-modules-sql sasl2-bin libpam-mysql openssl telnet mailx
+
+Do not bother with the packages we already installed, they will be skipped.
+
+As we sad that, we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL so we need to create database and tables in the MySQL.
+
+Download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
+
+  cd /root
+  wget http://garr.dl.sourceforge.net/sourceforge/postfixadmin/postfixadmin_2.3rc3.tar.gz
+  tar xvzzf postfixadmin_2.3rc3.tar.gz
+  
+move the extracted folder to ''/var/www/postfix''
+
+  mv /root/postfixadmin-2.3rc3 /var/www/postfix
+
+Before installing Postfix Admin we must create a database and a user to access the database where we will store all of the information about our domains.
+
+Start MySQL:
+
+  mysql -u root -p
+
+once in MySQL enter
+
+  CREATE DATABASE mail;
+
+Now we need to create a MySQL user that will have privileges to read and edit the mail database (change the ''newpassword'' to something else):
+
+  CREATE USER 'mailadmin'@'localhost' IDENTIFIED BY 'newpassword';
+  GRANT ALL PRIVILEGES ON `mail` . * TO 'mailadmin'@'localhost';
+  FLUSH PRIVILEGES;
+
+you can exit MySQL now by typing ''exit''.
+
+Open /var/www/postfix/config.inc.php with nano and change setting to:
+
+<file>
+ * The following line needs commenting out or removing before the
+ * application will run!
+ * Doing this implies you have changed this file as required.
+ */
+$CONF['configured'] = true;
+
+
+// Postfix Admin Path
+// Set the location of your Postfix Admin installation here.
+// YOU MUST ENTER THE COMPLETE URL e.g. http://domain.tld/postfixadmin
+$CONF['postfix_admin_url'] = 'http://YOUR-IP-ADDRESS/postfix';
+
+// shouldn't need changing.
+$CONF['postfix_admin_path'] = dirname(__FILE__);
+
+// Language config
+// Language files are located in './languages', change as required..
+$CONF['default_language'] = 'en';
+
+// Database Config
+// mysql = MySQL 3.23 and 4.0, 4.1 or 5
+// mysqli = MySQL 4.1+
+// pgsql = PostgreSQL
+$CONF['database_type'] = 'mysql';
+$CONF['database_host'] = 'localhost';
+$CONF['database_user'] = 'mailadmin';
+$CONF['database_password'] = 'newpassword';
+$CONF['database_name'] = 'mail';
+$CONF['database_prefix'] = '';
+</file>
+
+close the file and open http://YOUR-IP-ADDRESS/postfix/setup.php in your browser if everything went well you should be prompted to create the super admin account. Create the account, and after you log in into Postfix Admin create a new virtual domain 'example.com', and create new user accout ''root@example.com''.
+
+Since now we have created our MySQL tables it is time to change some Postfix setting. First we need to create 4 files in the /etc/postfix/ folder:
+
+mysql_virtual_alias_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = alias
+select_field = goto
+where_field = address
+</file>
+
+mysql_virtual_domains_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = domain
+select_field = domain
+where_field = domain
+#additional_conditions = and backupmx = '0' and active = '1'
+</file>
+
+mysql_virtual_mailbox_limit_maps.cf
+<file>
+ser = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+user = postfix
+password = postfixpassword
+hosts = 127.0.0.1
+dbname = postfix
+table = mailbox
+select_field = quota
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
+Note: We are not going to use mailbox limits because for this to work we should patch Postfix with a quota patch before installing. Since we are building a server for our personal use I do not really see the need for quotas. If you need them, there are a lot of resources on the internet that explain how to download source packages of Postfix, apply the quota patch and set quota for users.
+
+I am leaving this here, if somebody needs it.
+
+mysql_virtual_mailbox_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = mailbox
+select_field = maildir
+where_field = username
+#additional_conditions = and active = '1'
+</file>
+
+Although most of the guides on the net use this file, I do not like it because mailboxes for all virtual domains are saved in /home/vmail/username@domain.com . I like to separate my domain so that every domain has its own folder: ''/home/vmail/domain.com/username''. So we are going to change this file to:
+
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = mailbox
+query = SELECT CONCAT(domain,'/',SUBSTRING_INDEX(maildir,'@',1),'/') FROM mailbox WHERE username='%s' AND active = 1
+</file>
+
+/etc/postfix/mysql_relay_domains_maps.cf
+<file>
+user = mailadmin
+password = newpassword
+hosts = 127.0.0.1
+dbname = mail
+table = domain
+select_field = domain
+where_field = domain
+additional_conditions = and backupmx = '1'
+</file>
+
+Since these files contain passwords, we need to protect them:
+
+  atlantis:/etc/postfix# chgrp postfix /etc/postfix/mysql_*.cf
+  atlantis:/etc/postfix# chmod 640 /etc/postfix/mysql_*.cf
+
+Edit /etc/postfix/main.cf and at the bottom of the file add:
+
+  # Virtual Mailbox Domain Settings
+  
+  virtual_alias_maps = mysql:/etc/postfix/mysql_virtual_alias_maps.cf
+  virtual_mailbox_domains = mysql:/etc/postfix/mysql_virtual_domains_maps.cf
+  virtual_mailbox_maps = mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
+  virtual_mailbox_limit = 51200000
+  virtual_minimum_uid = 5000
+  virtual_uid_maps = static:5000
+  virtual_gid_maps = static:5000
+  virtual_mailbox_base = /home/vmail
+  virtual_transport = virtual
+
+You also need to delete everything after ''mydestination='' directive.
+
+Restart postfix
+
+  invoke-rc.d postfix restart
+
+send email to ''root@example.com''.
+
+
+  mail root@example.com
+
+  Subject: test email from example.com
+  test body of the email.
+  .
+  Cc:
+
+Check your ''/home/vmail/example.com'' folder. There should be a ''root'' folder inside, with 3 folders inside ''root'' : cur  new  tmp. Inside the folder new you should see your email message. If this didn't work, check ''/var/log/mail.log'' for possible hints on what went wrong.
+
+===== Saslauthd =====
+
+Since we want to allow users to log in to our mail server so they can send emails, we need to configure some kind of protection. First we need to make sure users can log in using the same username and password as the one they will be using for checking email.
+
+For this, we are going to use Saslauthd. We installed it at the beginning of this chapter when we were installing Postfix. Saslauthd will also use MySQL to verify user credentials.
+
+Open ''/etc/default/saslauthd'' with nano and change ''START=no'' to
+
+  START=yes
+
+and at the end of the file we need to change ''OPTIONS="-c -m /var/run/saslauthd"'' to
+
+  OPTIONS="-c -r -m /var/spool/postfix/var/run/saslauthd"
+
+We also need to create this directory
+
+  mkdir -p /var/spool/postfix/var/run/saslauthd
+
+and one symbolic link (because Postfix on Debian is running from a chrooted environment and other applications you maybe using on your server (including testsaslauthd for testing if saslauthd is working correctly) are not aware of us changing the saslauthd directory).
+
+  ln -s /var/spool/postfix/var/run/saslauthd /var/run/saslauthd
+ 
+We also need to create two more files:
+
+  nano /etc/pam.d/smtp
+
+<file>
+auth    required   pam_mysql.so user=mailadmin passwd=newpassword host=127.0.0.1 db=mail table=mailbox usercolumn=username passwdcolumn=password crypt=1
+account sufficient pam_mysql.so user=mailadmin passwd=newpassword host=127.0.0.1 db=mail table=mailbox usercolumn=username passwdcolumn=password crypt=1
+</file>
+
+  nano /etc/postfix/sasl/smtpd.conf
+
+<file>
+pwcheck_method: saslauthd
+mech_list: plain login
+allow_plaintext: true
+auxprop_plugin: mysql
+sql_hostnames: 127.0.0.1
+sql_user: mailadmin
+sql_passwd: newpassword
+sql_database: mail
+sql_select: select password from mailbox where username = '%u'
+</file>
+
+We need to add Postfix to the sasl group so it can access the saslauthd process we just setup:
+
+  adduser postfix sasl
+
+Restart Postfix and sasl
+
+  /etc/init.d/postfix restart
+  /etc/init.d/saslauthd restart
+
+Now, we can check is saslauthd is working correctly
+
+  testsaslauthd -s smtp -u root@example.com -p newpassword
+
+Ofcourse, replace root@example.com with the mail account you have created with Postfix Admin, and newpassword with the password you have set for this user.
+
+  atlantis:~# testsaslauthd -s smtp -u root@example.com -p newpassword
+  0: OK "Success."
+
+If you do not get "Success." as a response, check that you have a symbolic link in /var/run/ named saslauthd and that it points to ''/var/spool/postfix/var/run/saslautdh''.
+
+We have to change permissions to these two files as well:
+
+  chgrp sasl /etc/pam.d/smtp
+  chmod 640 /etc/pam.d/smtp
+  chgrp postfix /etc/postfix/sasl/smtpd.conf
+  chmod 640 /etc/postfix/sasl/smtpd.conf
+
+Restart Postfix and sasl
+
+  /etc/init.d/postfix restart
+  /etc/init.d/saslauthd restart
+
+===== TLS =====
+
+Now, we are going to configure Postfix to use TLS. If you still haven't created a self signed certificates do it now.
+
+Edit ''/etc/postfix/main.cf'' and look for the part containing:
+
+<file>
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_use_tls=yes
+smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+</file>
+
+and replace it with
+
+<file>
+smtpd_sasl_auth_enable = yes
+broken_sasl_auth_clients = yes
+smtpd_sasl_authenticated_header = yes
+smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+smtpd_use_tls = yes
+smtpd_tls_cert_file = /etc/ssl/self-signed/server.pem
+smtpd_tls_key_file = $smtpd_tls_cert_file
+</file>
+
+Note: ''/etc/ssl/self-signed/server.pem'' should point to the location of your .pem file.
+
+We are telling Postfix that we want to allow sending emails without authentication for our networks (localhost) and for users that authenticated using sasl we configured previously.
+
+Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected. (Note: change the firewall rules before).
+
+===== Enable submission port =====
+
+Many ISPs today block port 25 for users. To be able to send email using our Postfix mail server as our outgoing server, we need to enable submission port (port 587) for Postfix.
+
+Open ''/etc/postfix/master.cf'' and uncomment the folloging lines:
+
+<file>
+submission inet n       -       -       -       -       smtpd
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+</file>
+
+Note: spaces in the lines after the first line are important. Do not delete them!
+
+===== Postfix firewall rules =====
+
+You have to change Firewall rules to allow inbound connections to ports that Postfix uses:
+
+  * Port 25 for incoming mail from other mail servers and from clients (if they can use this port)
+  * Submission port 587 for incoming mail from users
