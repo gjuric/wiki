@@ -1,4 +1,5 @@
 ====== PHP ======
+===== Installation =====
 
 To install PHP and mod_php module for Apache you have to run
 
