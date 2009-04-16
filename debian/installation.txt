@@ -1,0 +1,28 @@
+===== Installation =====
+
+Download Debian Lenny Tiny CD from http://www.debian.org/distrib/netinst and burn the image to a compact disc, or mount it as a CD image in your virtualisation software.
+
+Boot your computer and select Install, after that you only need to choose your Language, Country and Keymap you want to use. If your computer is not connected to a network with DHCP you will be prompted to enter network connection parameters manually. After configuring your network and DNS server you will be asked for a hostname, in our case, the hostname is **atlantis** and our domain name is **example.com**.
+
+When prompted to select Debian mirror the selected choice is usually the best one. If your are not using HTTP proxy on your internet connection, or don't know what HTTP proxy is, just leave this field blank.
+
+When prompted to partition the disk for are Debian install, choose Guided - use entire disk. Install all files in one partition.
+
+Grab a cup of coffee and wait until installation finishes fetching packages from the internet and installs the base system.
+
+Enter your root password. This is a password for root user who has all the privileges on the system, so choose one carefully. After that, you have to create a new user for the system.
+
+You will be asked if you want to participate in the Debians popularity contest which collects information about most used packages. Feel free to answer whatever you like, by choosing Yes you are helping the Debian community to find the most used packages in the distribution. Help them out, it doesn't cost you a thing.
+
+When prompted to select collections of software packages deselect everrything. We just need to install the base system because we will add all needed packages when and if we need them.
+
+Since Debian will be the only system on our machine we have to select to install GRUB on to the master boot record.
+
+Your Debian system is almost ready to go. When asked, remove the installation media from your drive (or unmount the image in your virtualisation software) and reboot your computer.
+
+When your computer boots up you can log in with the root user account and update the packages in your system running:
+
+  apt-get update
+  apt-get upgrade
+
+And that is it. Your new Debian is installed and ready for configuration. It took me around 10 to 15 minutes from start to finish.
