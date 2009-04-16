@@ -1,0 +1,71 @@
+====== Courier ======
+
+To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you can run:
+
+  apt-get install courier-authdaemon courier-authlib-mysql courier-pop courier-pop-ssl courier-imap courier-imap-ssl
+
+Since I do not use POP3 I am only installing
+
+  apt-get install courier-authdaemon courier-authlib-mysql courier-imap courier-imap-ssl
+
+When asked if you would like to create directories for web-based administration, answer **No**.
+
+Open ''/etc/courier/authdaemonrc'' and change
+
+  authmodulelist="authpam"
+to
+  authmodulelist="authmysql"
+
+Create a backup of the ''/etc/courier/authmysqlrc'' file
+
+  cd /etc/courier/
+  cp authmysqlrc authmysqlrc~
+
+Empty ''/etc/courier/authmysqlrc''
+
+  cat /dev/null > /etc/courier/authmysqlrc
+  nano /etc/courier/authmysqlrc
+
+And paste the following:
+
+<file>
+MYSQL_SERVER localhost
+MYSQL_USERNAME mailadmin
+MYSQL_PASSWORD newpassword
+MYSQL_PORT 0
+MYSQL_DATABASE mail
+MYSQL_USER_TABLE mailbox
+MYSQL_CRYPT_PWFIELD password
+MYSQL_UID_FIELD 5000
+MYSQL_GID_FIELD 5000
+MYSQL_LOGIN_FIELD username
+MYSQL_HOME_FIELD "/home/vmail"
+MYSQL_MAILDIR_FIELD CONCAT(SUBSTRING_INDEX(username,'@',-1),'/',SUBSTRING_INDEX(username,'@',1),'/')
+</file>
+
+===== Configure Courier to user our certificates =====
+
+  nano /etc/courier/imapd-ssl
+
+and change values of TLS_CERTFILE and TLS_TRUSTCERTS to
+
+  TLS_CERTFILE=/etc/ssl/self-signed/server.pem
+  TLS_TRUSTCERTS=/etc/ssl/self-signed/server.crt
+
+To restart Courier you have to restart couple of services
+
+  /etc/init.d/courier-authdaemon restart
+  /etc/init.d/courier-imap restart
+  /etc/init.d/courier-imap-ssl restart
+
+And if you have installed POP3 as well
+
+  /etc/init.d/courier-pop restart
+  /etc/init.d/courier-pop-ssl restart
+
+===== Courier firewall rules =====
+
+You have to change Firewall rules to allow inbound connections to ports that Courier uses:
+
+  * Pop and secure Pop use ports 110 and 995 respectively.
+  * Imap and secure imap use ports 143 and 993 respectively.
