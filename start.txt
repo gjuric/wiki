@@ -19,7 +19,9 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Debian:Postfix]]
     - [[Debian:Courier]]
     - [[Debian:Webmail]]
-
+  - Other services
+    - [[Subversion]]
+    - [[Redmine]]
 
 ====== Croatian ======
 
