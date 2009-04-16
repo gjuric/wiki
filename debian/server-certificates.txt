@@ -1,0 +1,16 @@
+===== Server certificates =====
+
+For information on how to create a self signed certificate take a look at http://www.akadia.com/services/ssh_test_certificate.html just make sure that you enter your host name when asked for ''Common Name (eg, YOUR name) []'' **atlantis.example.com**.
+
+Now, you should have 4 files:
+
+  * server.crt
+  * server.csr
+  * server.key
+  * server.key.org
+
+To create a .pem file you need to run:
+
+  cat server.crt server.key > server.pem
+
+Since server.key and server.pem contain server key that is not encrypted you have to make sure regular users on your server can not access these files.
