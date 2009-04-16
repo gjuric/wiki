@@ -1,7 +1,1 @@
-====== Linux ======
-
-  * [[Debian]]
-
-====== Croatian ======
-
-  * [[hr:Debian]]
+====== gog's info ======
