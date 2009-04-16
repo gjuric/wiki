@@ -1,0 +1,5 @@
+====== Essential software ======
+
+Since we opted for a bare bones system we are going to install some utility packages and an SSH server so we can connect to our server using [[http://www.chiark.greenend.org.uk/~sgtatham/putty/|Putty]], or a *nix shell.
+
+  apt-get install ssh wget nano
