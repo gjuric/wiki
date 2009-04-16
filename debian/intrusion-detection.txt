@@ -1,0 +1,5 @@
+====== Intrusion Detection ======
+
+For intrusion detection we are going to use [[http://www.ossec.net/|OSSEC]].
+
+While I write this article, you can take a look at http://www.howtoforge.com/intrusion_detection_with_ossec_hids
