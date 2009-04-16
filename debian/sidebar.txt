@@ -1,6 +1,18 @@
 ====== Debian ======
 
-
-  - [[Installation]]
-
-
+  - [[Debian:Installation]]
+    - [[Debian:Essential software]]
+    - [[Debian:Static IP address]]
+  - [[Debian:Security]]
+    - [[Debian:Firewall]]
+    - [[Debian:Intrusion detection]]
+    - [[Debian:Server certificates]]
+  - [[Debian:LAMP]]
+    - [[Debian:MySQL]]
+    - [[Debian:Apache]]
+    - [[Debian:PHP]]
+  - [[Debian:Mail server]]
+    - [[Debian:Dns records]]
+    - [[Debian:Postfix]]
+    - [[Debian:Courier]]
+    - [[Debian:Webmail]]
