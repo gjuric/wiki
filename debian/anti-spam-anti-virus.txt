@@ -202,7 +202,7 @@ $banned_files_quarantine_method = undef;
 $bad_header_quarantine_method = undef;
 </file>
 
-SQL support for amavis, except for easier access to quarantined messages also provides features to change spam setting of a per user basis. Once you create the database, and configure ''@lookup_sql_dsn'' this part is very easy achieved by reading through the amavis documentation.
+SQL support for amavis, except for easier access to quarantined messages also provides features to change spam setting on a per user basis. Once you create the database, and configure ''@lookup_sql_dsn'' this part is very easy achieved by reading through the amavis documentation.
 
 Messages that have a spam value between ''$sa_tag2_level_deflt'' and ''$sa_kill_level_deflt'' are delivered into the recipients mailbox and marked with "SPAM >" in the subject and have the ''X-Spam-Flag: YES''. Although this may be enough for you, since I use only IMAP access to the mailboxes I wanted to move this messages to the ''Junk'' folder inside the users mailbox automatically. This has some benefits: Inbox will not be filled with spam messages, but in case of a false positive, user could check his Junk folder to check for messages marked as spam. This folder can also be used for learning SpamAssassing what is spam, and if users move the messages that are not recognized as spam to this folder instead of deleting them SpamAssassin will get smarter about what is considered to be spam, and what is not.
 
