@@ -180,7 +180,7 @@ $banned_files_quarantine_method = 'sql:';
 $bad_header_quarantine_method = 'sql:';
 </file>
 
-For this to work, you will have to create the database in MySQL and change the value of ''@lookup_sql_dsn'' variable to match your database, username & password. You will have to create the tables for this database by looking at the amavis documentation). When you set this all up, you can use [[http://www.mailzu.net/|Mailzu]] or [[http://postvisadmin.sourceforge.net/|Postvis Admin]] to retrieve the quarantined messages. For users of [[http://www.squirrelmail.org/|SquirrelMail]] webmail system, there as a plugin called [[http://freshmeat.net/projects/amavisnewsql/|AmavisNewSQL]] which enables access for users to quarantined messages that were addressed to them.
+For this to work, you will have to create the database in MySQL and change the value of ''@lookup_sql_dsn'' variable to match your database, username & password. You will have to create the tables for this database by looking at the [[http://www.ijs.si/software/amavisd/README.sql-mysql.txt|amavis documentation]]). When you set this all up, you can use [[http://www.mailzu.net/|Mailzu]] or [[http://postvisadmin.sourceforge.net/|Postvis Admin]] to retrieve the quarantined messages. For users of [[http://www.squirrelmail.org/|SquirrelMail]] webmail system, there as a plugin called [[http://freshmeat.net/projects/amavisnewsql/|AmavisNewSQL]] which enables access for users to quarantined messages that were addressed to them.
 
 Note: quarantined messages (on the file system, or in the database) have to be deleted periodically!!!
 
