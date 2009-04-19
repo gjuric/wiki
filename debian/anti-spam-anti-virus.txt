@@ -223,7 +223,7 @@ Maildrop config file is located at ''/etc/maildroprc'', open it and replace the 
 # This maildroprc automagically creates a Spam folder for the recipient
 # and places spam there. It also subscibes the recipient to the folder.
 #
-# Example maildir: /var/vmail/example.com/user/
+# Example maildir: /home/vmail/example.com/user/
 #
 # Also in main.cf:
 # virtual_transport = maildrop
@@ -300,6 +300,18 @@ Create the log file, and change ownership:
   touch /var/log/maildroprc.log
   chown vmail:vmail /var/log/maildroprc.log
 
+To automatically rotate logs for the maildroprc.log file create ''/etc/logrotate.d/maildroprc'' and paste this:
+
+<file>
+/var/log/maildroprc.log {
+    rotate 7
+    daily
+    compress
+    delaycompress
+    copytruncate
+    notifempty
+}
+</file>
 
 Edit ''/etc/postfix/main.cf'' and add
 
