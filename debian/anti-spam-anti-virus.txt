@@ -1,4 +1,5 @@
 ====== Anti-spam and Anti-virus ======
+===== Installation =====
 
 
 This part is taken from https://help.ubuntu.com/community/PostfixAmavisNew
@@ -73,28 +74,6 @@ use strict;
 1;  # ensure a defined return
 </file>
 
-Bouncing spam can be a bad idea as the return address is often faked, so it may have your server put on a blacklist. Edit /etc/amavis/conf.d/20-debian_defaults and change:
-
-  $final_spam_destiny       = D_PASS;
-
-Bouncing spam is not a good idea. I suggest you also change default spam levels and lover them at a later time if you start getting to much spam:
-
-  $sa_spam_subject_tag = '***SPAM*** ';
-  $sa_tag_level_deflt  = 6.0;  # add spam info headers if at, or above that level
-  $sa_tag2_level_deflt = 10; # add 'spam detected' headers at that level
-  $sa_kill_level_deflt = 10; # triggers spam evasive actions
-  $sa_dsn_cutoff_level = 10;   # spam level beyond which a DSN is not sent
-
-Configuring other options (including SpamAssasing are currently out of scope for this document).
-
-Change the permissions on ''/var/lib/amavis/tmp''
-
-  chmod -R 775 /var/lib/amavis/tmp
-
-After configuration Amavis needs to be restarted:
-
-sudo /etc/init.d/amavis restart
-
 To integrate Amavis with Postfix we need to add the ''content_filter'' in ''/etc/postfix/main.cf''
 
   content_filter = smtp-amavis:[127.0.0.1]:10024
@@ -139,6 +118,220 @@ and add this immediately below the "pickup" transport service:
 
 This will prevent messages that are generated to report on spam from being classified as spam. 
 
+==== Configure Amavis ====
+
+Edit /etc/amavis/conf.d/50-user and paste this into the file
+
+<file>
+use strict;
+
+@local_domains_acl = ( ".$mydomain" );
+
+$sa_spam_subject_tag = 'SPAM > ';
+$sa_tag_level_deflt  = -999;  # add spam info headers if at, or above that level
+$sa_tag2_level_deflt = 5; # add 'spam detected' headers at that level
+$sa_kill_level_deflt = 12; # triggers spam evasive actions
+
+$final_virus_destiny      = D_DISCARD;  # (data not lost, see virus quarantine)
+$final_banned_destiny     = D_REJECT;   # D_REJECT when front-end MTA
+$final_spam_destiny       = D_DISCARD;
+$final_bad_header_destiny = D_PASS;     # False-positive prone (for spam)
+
+#------------ Do not modify anything below this line -------------
+1;  # ensure a defined return
+</file>
+
+Ofcourse, you do not just want to paste stuff into configuration files without knowing what are you actually doing. Se let us go throug the file, line by line:
+
+  @local_domains_acl = ( ".$mydomain" );
+
+This is a list of domains for which this server considers itself as a final destination. If you do not add all your domains here, they will not be processed by amavis, so if you have more domains on your server, except for the default line, this should look something like this:
+
+  @local_domains_acl = ( ".$mydomain", "domain2.com", "domain3.org" );
+
+Later, we will see how can automate this to read the information from the database.
+
+  $sa_spam_subject_tag = 'SPAM > ';
+  $sa_tag_level_deflt  = -999;  # add spam info headers if at, or above that level
+  $sa_tag2_level_deflt = 5; # add 'spam detected' headers at that level
+  $sa_kill_level_deflt = 12; # triggers spam evasive actions
+
+When SpamAssassin processes message, it gives them a score identifying what is the probability of message being a spam. ''$sa_tag_level_deflt'' tells amavis that ig the score is greater or equal to this level that amavis should append X-Spam headers to the message. The score of -999 means that we want to apply X-Spam header to all of our messages, so it is easier for us to see why is, or why is not a message considered spam by examining the headers of the message.
+
+''$sa_tag2_level_deflt = 5;'' is the spam level the message needs to reach for amavis to apply the header ''X-Spam-Flag: YES'' so we (our mail client) knows that this message is considered to be spam. At this level the message subject is prefixed with the value of the variable ''$sa_spam_subject_tag''. In this case the subject is prefixed with "SPAM > ".
+
+''$sa_kill_level_deflt'' hold the value of the spam level that message needs to reach to do something with the message. What we are going to do with messages that are spam depends of the value of ''$final_spam_destiny'' variable. In this case we are discarding this messages. This means that the message is not going to reach to recipients mailbox at all. But that does not mean that are message is lost. Spam messages that are discarded can still be fetched from the system. Default configuration is to store them in the ''/var/lib/amavis/virusmails'' folder. It is possible to store them in the databse, for this you have the add this lines as well:
+
+<file>
+@lookup_sql_dsn =  ( ['DBI:mysql:database=DATABASE-NAME;host=127.0.0.1;port=3306', 'USERNAME', 'PASSWORD']);
+@storage_sql_dsn = @lookup_sql_dsn;
+
+$inet_socket_port = [10024,9998];
+$interface_policy{'9998'} = 'AM.PDP-INET';
+$policy_bank{'AM.PDP-INET'} = {
+  protocol => 'AM.PDP',  # select Amavis policy delegation protocol
+  inet_acl => [qw( 127.0.0.1 [::1] )],  # restrict access to these IP addresses
+# auth_required_release => 0,  # don't require secret_id for amavisd-release
+};
+
+$virus_quarantine_method = 'sql:';
+$spam_quarantine_method = 'sql:';
+$banned_files_quarantine_method = 'sql:';
+$bad_header_quarantine_method = 'sql:';
+</file>
+
+For this to work, you will have to create the database in MySQL and change the value of ''@lookup_sql_dsn'' variable to match your database, username & password. You will have to create the tables for this database by looking at the amavis documentation). When you set this all up, you can use [[http://www.mailzu.net/|Mailzu]] or [[http://postvisadmin.sourceforge.net/|Postvis Admin]] to retrieve the quarantined messages. For users of [[http://www.squirrelmail.org/|SquirrelMail]] webmail system, there as a plugin called [[http://freshmeat.net/projects/amavisnewsql/|AmavisNewSQL]] which enables access for users to quarantined messages that were addressed to them.
+
+Note: quarantined messages (on the file system, or in the database) have to be deleted periodically!!!
+
+If you do not want to quarantine any of the messages, change 
+
+<file>
+$virus_quarantine_method = 'sql:';
+$spam_quarantine_method = 'sql:';
+$banned_files_quarantine_method = 'sql:';
+$bad_header_quarantine_method = 'sql:';
+</file>
+
+to
+
+<file>
+$virus_quarantine_method = undef;
+$spam_quarantine_method = undef;
+$banned_files_quarantine_method = undef;
+$bad_header_quarantine_method = undef;
+</file>
+
+SQL support for amavis, except for easier access to quarantined messages also provides features to change spam setting of a per user basis. Once you create the database, and configure ''@lookup_sql_dsn'' this part is very easy achieved by reading through the amavis documentation.
+
+Messages that have a spam value between ''$sa_tag2_level_deflt'' and ''$sa_kill_level_deflt'' are delivered into the recipients mailbox and marked with "SPAM >" in the subject and have the ''X-Spam-Flag: YES''. Although this may be enough for you, since I use only IMAP access to the mailboxes I wanted to move this messages to the ''Junk'' folder inside the users mailbox automatically. This has some benefits: Inbox will not be filled with spam messages, but in case of a false positive, user could check his Junk folder to check for messages marked as spam. This folder can also be used for learning SpamAssassing what is spam, and if users move the messages that are not recognized as spam to this folder instead of deleting them SpamAssassin will get smarter about what is considered to be spam, and what is not.
+
+===== Maildrop =====
+
+To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
+
+To install maildrop, run
+
+  apt-get install maildrop
+
+Maildrop config file is located at ''/etc/maildroprc'', open it and replace the content with:
+
+<file>
+# Global maildrop filter file (used on Debian)
+# For use with Postfix/Courier IMAP/Amavisd-new virtual mailbox domains.
+#
+# This maildroprc automagically creates a Spam folder for the recipient
+# and places spam there. It also subscibes the recipient to the folder.
+#
+# Example maildir: /var/vmail/example.com/user/
+#
+# Also in main.cf:
+# virtual_transport = maildrop
+# maildrop_destination_concurrency_limit = 2
+# maildrop_destination_recipient_limit = 1
+#
+# and in master.cf:
+#
+# maildrop  unix  -       n       n       -       -       pipe
+#  flags=DRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+#  ${extension} ${recipient} ${user} ${nexthop}
+#
+# /var/log/maildroprc.log needs to exist and owned by vmail:vmail and
+# a logrotate script needs to be created.
+#
+
+HOME_DIR="/home/vmail"
+logfile "/var/log/maildroprc.log"
+EXTENSION="$1"
+RECIPIENT=tolower("$2")
+USER="$3"
+HOST="$4"
+SENDER="$5"
+
+if (/^X-Spam-Flag: YES/)
+{
+   # Change 'spam' to 'Spam' since folder names are typically capitalized
+   EXTENSION = "Junk"
+
+   # Autocreate extension maildir
+   #
+   # See if the user exists
+   `test -e $HOME_DIR/$HOST/$USER`
+   #log "Testing for $HOME_DIR/$HOST/$USER subdirectory: result=$RETURNCODE"
+
+   # Only continue if user is valid
+   if ( $RETURNCODE == 0 )
+   {
+      # See if the spam directory already exists
+      `test -e $HOME_DIR/$HOST/$USER/.$EXTENSION`
+      #log "Testing for $EXTENSION subdirectory: result=$RETURNCODE"
+
+      if ( $RETURNCODE != 0 ) # spam directory does not exist - so we create it
+      {
+
+         # Create the subdirectory
+         `maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER`
+         log "Ran \"maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER\""
+
+         # Auto-subscribe the subdirectory
+         `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscr$
+
+         # Set permissions on the mailbox
+         `chmod -R 0700 $HOME_DIR/$HOST/$USER`
+         log " Ran \"chmod -R 0700 $HOME_DIR/$HOST/$USER\""
+      }
+
+      # Deliver the message to the mailbox
+      exception {
+      # for those who unsubscribed themselves - subscribe them
+     `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed$
+      to "$HOME_DIR/$HOST/$USER/.$EXTENSION"
+      }
+   }
+}
+</file>
+
+This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html 
+
+This script check for the ''X-Spam-Flag: YES'' header in the messages and delivers them to the Junk folder. It also checks if the users Maildir has a ''Junk'' folder, and it creates it if the folder does not exist.
+
+Create the log file, and change ownership:
+
+  touch /var/log/maildroprc.log
+  chown vmail:vmail /var/log/maildroprc.log
+
+
+Edit ''/etc/postfix/main.cf'' and add
+
+  virtual_transport = maildrop
+  maildrop_destination_concurrency_limit = 2
+  maildrop_destination_recipient_limit = 1
+
+Note: you already have ''virtual_transport = virtual'', you have to replace this line and change ''virtual'' to ''maildrop''.
+
+Edit ''/etc/postfix/master.cf'' and look for
+
+  maildrop  unix  -       n       n       -       -       pipe
+    flags=DRhu user=vmail argv=/usr/bin/maildrop -d ${recipient}
+
+and replace it with
+
+  maildrop  unix  -       n       n       -       -       pipe
+    flags=ODRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+    ${extension} ${recipient} ${user} ${nexthop}
+
+
+Change the permissions on ''/var/lib/amavis/tmp''
+
+  chmod -R 775 /var/lib/amavis/tmp
+
+After configuration Amavis needs to be restarted:
+
+  /etc/init.d/amavis restart
+
 Restart Postfix:
 
   /etc/init.d/postfix restart
+
+Send a test email to check that everything is working.
+
