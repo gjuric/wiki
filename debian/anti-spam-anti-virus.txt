@@ -206,6 +206,40 @@ SQL support for amavis, except for easier access to quarantined messages also pr
 
 Messages that have a spam value between ''$sa_tag2_level_deflt'' and ''$sa_kill_level_deflt'' are delivered into the recipients mailbox and marked with "SPAM >" in the subject and have the ''X-Spam-Flag: YES''. Although this may be enough for you, since I use only IMAP access to the mailboxes I wanted to move this messages to the ''Junk'' folder inside the users mailbox automatically. This has some benefits: Inbox will not be filled with spam messages, but in case of a false positive, user could check his Junk folder to check for messages marked as spam. This folder can also be used for learning SpamAssassing what is spam, and if users move the messages that are not recognized as spam to this folder instead of deleting them SpamAssassin will get smarter about what is considered to be spam, and what is not.
 
+===== SpamAssassin =====
+
+To enable [[http://www.dkim.org/|DKIM]] checking of received emails in SpamAssassin one has to install Mail::DKIM Perl library.
+
+   apt-get install libmail-dkim-perl
+
+edit ''/etc/spamassassin/v312.pre'' and uncomment the line
+
+  loadplugin Mail::SpamAssassin::Plugin::DKIM
+
+After that you can run SpamAssassing manually:
+
+  spamassassin -D -t < /usr/share/doc/spamassassin/examples/sample-spam.txt 2>&1 | tee sa.out
+
+You should see DKIM mentioned in the sa.out file, and the end of the output should look something like this:
+
+Content analysis details:   (1005.3 points, 5.0 required)
+
+<code>
+ pts rule name              description
+---- ---------------------- --------------------------------------------------
+-0.0 NO_RELAYS              Informational: message was not relayed via SMTP
+1000 GTUBE                  BODY: Generic Test for Unsolicited Bulk Email
+ 1.5 RAZOR2_CF_RANGE_E4_51_100 Razor2 gives engine 4 confidence level
+                            above 50%
+                            [cf: 100]
+ 0.5 RAZOR2_CHECK           Listed in Razor2 (http://razor.sf.net/)
+ 0.5 RAZOR2_CF_RANGE_51_100 Razor2 gives confidence level above 50%
+                            [cf: 100]
+ 2.8 PYZOR_CHECK            Listed in Pyzor (http://pyzor.sf.net/)
+ 0.0 DIGEST_MULTIPLE        Message hits more than one network digest check
+-0.0 NO_RECEIVED            Informational: message has no Received headers
+</code>
+
 ===== Maildrop =====
 
 To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
