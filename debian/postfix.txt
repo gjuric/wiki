@@ -421,6 +421,26 @@ submission inet n       -       -       -       -       smtpd
 
 Note: spaces in the lines after the first line are important. Do not delete them!
 
+===== Banning attachments =====
+
+To block certain extensions of attachments (.exe, .bat, ...) edit ''/etc/postfix/main.cf'' and add
+
+  mime_header_checks = regexp:/etc/postfix/mime_header_checks
+
+Create ''/etc/postfix/mime_header_checks'' and insert
+
+  /name=[^>]*\.(bat|com|exe|dll|vbs)$/ REJECT
+  
+add all the extension you want to disable here.
+
+
+===== Maximum message size =====
+
+Default maximum size of the message is 10240000 bytes (10 MB), to change this to 20MB edit ''/etc/postfix/main.cf''
+
+  message_size_limit = 20480000
+
+
 ===== Postfix firewall rules =====
 
 You have to change Firewall rules to allow inbound connections to ports that Postfix uses:
