@@ -244,6 +244,17 @@ Restart SpamAssassin daemon
 
   /etc/init.d/spamassassin restart
 
+To learn SpamAssassin what is spam, run the sa-learn utillity on your Junk folder (move into the Junk folder spam, and only spam!!!!)
+
+  sa-learn --no-sync --spam /home/vmail/example.com/demo/.Junk/cur
+
+To learn what is not spam run sa-learn in the folder that only contains your non-spam mail
+
+  sa-learn --no-sync --ham /home/vmail/example.com/demo/cur
+
+Bayes filtering will be used once you train SA on more than 200 spam and ham messages.
+
+
 ===== Maildrop =====
 
 To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
