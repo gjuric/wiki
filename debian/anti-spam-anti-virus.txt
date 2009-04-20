@@ -240,6 +240,10 @@ Content analysis details:   (1005.3 points, 5.0 required)
 -0.0 NO_RECEIVED            Informational: message has no Received headers
 </code>
 
+Restart SpamAssassin daemon
+
+  /etc/init.d/spamassassin restart
+
 ===== Maildrop =====
 
 To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
