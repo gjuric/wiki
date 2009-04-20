@@ -1,0 +1,160 @@
+====== Maildrop ======
+
+To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
+
+To install maildrop, run
+
+  apt-get install maildrop
+
+Maildrop config file is located at ''/etc/maildroprc'', open it and replace the content with:
+
+<file>
+# Global maildrop filter file (used on Debian)
+# For use with Postfix/Courier IMAP/Amavisd-new virtual mailbox domains.
+#
+# This maildroprc automagically creates a Spam folder for the recipient
+# and places spam there. It also subscibes the recipient to the folder.
+#
+# Example maildir: /home/vmail/example.com/user/
+#
+# Also in main.cf:
+# virtual_transport = maildrop
+# maildrop_destination_concurrency_limit = 2
+# maildrop_destination_recipient_limit = 1
+#
+# and in master.cf:
+#
+# maildrop  unix  -       n       n       -       -       pipe
+#  flags=DRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+#  ${extension} ${recipient} ${user} ${nexthop}
+#
+# /var/log/maildroprc.log needs to exist and owned by vmail:vmail and
+# a logrotate script needs to be created.
+#
+
+HOME_DIR="/home/vmail"
+logfile "/var/log/maildroprc.log"
+EXTENSION="$1"
+RECIPIENT=tolower("$2")
+USER="$3"
+HOST="$4"
+SENDER="$5"
+
+if (/^X-Spam-Flag: YES/)
+{
+   # Change 'spam' to 'Spam' since folder names are typically capitalized
+   EXTENSION = "Junk"
+
+   # Autocreate extension maildir
+   #
+   # See if the user exists
+   `test -e $HOME_DIR/$HOST/$USER`
+   #log "Testing for $HOME_DIR/$HOST/$USER subdirectory: result=$RETURNCODE"
+
+   # Only continue if user is valid
+   if ( $RETURNCODE == 0 )
+   {
+      # See if the spam directory already exists
+      `test -e $HOME_DIR/$HOST/$USER/.$EXTENSION`
+      #log "Testing for $EXTENSION subdirectory: result=$RETURNCODE"
+
+      if ( $RETURNCODE != 0 ) # spam directory does not exist - so we create it
+      {
+
+         # Create the subdirectory
+         `maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER`
+         log "Ran \"maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER\""
+
+         # Auto-subscribe the subdirectory
+         `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscr$
+
+         # Set permissions on the mailbox
+         `chmod -R 0700 $HOME_DIR/$HOST/$USER`
+         log " Ran \"chmod -R 0700 $HOME_DIR/$HOST/$USER\""
+      }
+
+      # Deliver the message to the mailbox
+      exception {
+      # for those who unsubscribed themselves - subscribe them
+     `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed$
+      to "$HOME_DIR/$HOST/$USER/.$EXTENSION"
+      }
+   }
+}
+</file>
+
+This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html 
+
+This script check for the ''X-Spam-Flag: YES'' header in the messages and delivers them to the Junk folder. It also checks if the users Maildir has a ''Junk'' folder, and it creates it if the folder does not exist.
+
+Create the log file, and change ownership:
+
+  touch /var/log/maildroprc.log
+  chown vmail:vmail /var/log/maildroprc.log
+
+To automatically rotate logs for the maildroprc.log file create ''/etc/logrotate.d/maildroprc'' and paste this:
+
+<file>
+/var/log/maildroprc.log {
+    rotate 7
+    daily
+    compress
+    delaycompress
+    copytruncate
+    notifempty
+}
+</file>
+
+Edit ''/etc/postfix/main.cf'' and add
+
+  virtual_transport = maildrop
+  maildrop_destination_concurrency_limit = 2
+  maildrop_destination_recipient_limit = 1
+
+Note: you already have ''virtual_transport = virtual'', you have to replace this line and change ''virtual'' to ''maildrop''.
+
+Edit ''/etc/postfix/master.cf'' and look for
+
+  maildrop  unix  -       n       n       -       -       pipe
+    flags=DRhu user=vmail argv=/usr/bin/maildrop -d ${recipient}
+
+and replace it with
+
+  maildrop  unix  -       n       n       -       -       pipe
+    flags=ODRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+    ${extension} ${recipient} ${user} ${nexthop}
+
+
+Change the permissions on ''/var/lib/amavis/tmp''
+
+  chmod -R 775 /var/lib/amavis/tmp
+
+After configuration Amavis needs to be restarted:
+
+  /etc/init.d/amavis restart
+
+Restart Postfix:
+
+  /etc/init.d/postfix restart
+
+Send a test email to check that everything is working.
+
+===== Automatic creation of Maildirs =====
+
+TODO: Postfix admin can be configured to run scripts after mailbox creation. We can use this feature to automatically run ''maildirmake'' command to create users Maildirs (including the domain folder if this is the firs mailbox for the domain, as well as the ''Junk'' folder, and other folders that we can use with Roundube, like ''Trash'' and ''Sent'').
+
+For the imapatient, there is a script for this lcoated at http://www200.pair.com/mecham/spam/maildirmake.sh.txt but note, that this script also creates Maildir quotas and that in this tutorial we do not support quota, as this requires Postfix to be patched. If you want to create the Maildirs by hand, here is an example for a new domain example.com and a new mailbox for a user ''demo''.
+
+  cd /home/vmail
+  mkdir example.com
+  maildirmake demo
+  cd demo
+  maildirmake -f Junk
+  
+then edit ''/home/vmail/example.com/demo/courierimapsubscribed'' and add ''INBOX.Junk'' to the file. If you create ''Sent'' and ''Trash'' folders ''courierimapsubscribed'' should look like:
+
+<file>
+INBOX.Sent
+INBOX.Trash
+INBOX.Junk
+</file>
