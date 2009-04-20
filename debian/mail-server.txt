@@ -1,10 +1,14 @@
 ====== Mail server ======
 
 
-We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will user virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
+We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will use virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
 
 For virus scanning and spam protection of our emails we will use [[http://www.clamav.net/|ClamAV]] and [[http://spamassassin.apache.org/|Spamassassin]] that will be run using [[http://www.ijs.si/software/amavisd/|amavisd-new]].
 
-Note: this tutorial is a combination of tutorials published on http://articles.slicehost.com/email and https://help.ubuntu.com/community/PostfixCompleteVirtualMailSystemHowto.
+As a local delivery agent we will use Maildrop that will be configured to move all messages marked as spam to the Junk folder as well as to make sure that users do not go over their assigned quota.
+
+This implementation of quota on the mail system does not require you to patch Postfix. All software is installed from official Debian repositories.
+
+Note: this tutorial is a combination of tutorials published on http://articles.slicehost.com/email and https://help.ubuntu.com/community/PostfixCompleteVirtualMailSystemHowto and a lot of my own work.
 
 You also must have a valid MX record in the DNS zone of your domain pointing to the IP address of the server.
