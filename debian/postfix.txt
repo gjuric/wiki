@@ -440,6 +440,13 @@ Default maximum size of the message is 10240000 bytes (10 MB), to change this to
 
   message_size_limit = 20480000
 
+===== Important commands =====
+
+  * postconf mail_version - Find out what Postfix Version is installed
+  * mailq - Show Mail Queue
+  * postsuper -d ALL - Remove bounced mail from the queue.
+  * postfix flush - Flush the Mail Queue
+  * postfix check - Check Installation
 
 ===== Postfix firewall rules =====
 
