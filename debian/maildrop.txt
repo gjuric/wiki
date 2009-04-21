@@ -2,6 +2,8 @@
 
 To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
 
+Note: this tutorial is half finished. Maildrop still doesn't check if the domain, and user folders exist.
+
 To install maildrop, run
 
   apt-get install maildrop
@@ -158,3 +160,34 @@ INBOX.Sent
 INBOX.Trash
 INBOX.Junk
 </file>
+
+===== Per user filtering =====
+
+If you would like to have the ability to provide per user filtering you will have to modify ''/etc/maildroprc'' to
+
+  - check if there is a "mailfilter" file in the users directory
+  - include the file
+
+Note: you can use some other file name if you like
+
+You can change it to look like this:
+
+<file>
+[....]
+SENDER="$5"
+DEFAULT="$HOME_DIR/$HOST/$USER"
+
+`test -e $DEFAULT/mailfilter`
+if ( $RETURNCODE == 0 )
+{
+     exception {
+         log "Including $HOME_DIR/$HOST/$USER/.mailfilter..."
+         include "$HOME_DIR/$HOST/$USER/.mailfilter"
+     }
+}
+
+if (/^X-Spam-Flag: YES/)
+[...]
+</file>
+
+All you have to do now is to put your rules in the mailfilter file.
