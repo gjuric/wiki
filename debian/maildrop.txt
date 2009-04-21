@@ -68,7 +68,7 @@ if (/^X-Spam-Flag: YES/)
          log "Ran \"maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER\""
 
          # Auto-subscribe the subdirectory
-         `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscr$
+         `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
 
          # Set permissions on the mailbox
          `chmod -R 0700 $HOME_DIR/$HOST/$USER`
@@ -78,7 +78,7 @@ if (/^X-Spam-Flag: YES/)
       # Deliver the message to the mailbox
       exception {
       # for those who unsubscribed themselves - subscribe them
-     `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed$
+     `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
       to "$HOME_DIR/$HOST/$USER/.$EXTENSION"
       }
    }
