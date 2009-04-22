@@ -4,7 +4,7 @@ To make sure our servers time is always up to date we are going to install ntp p
 
   apt-get install ntp
 
-If your data center, or VPS provider offers an NTP server it is wise to use their NTP server. Open up /etc/ntp.conf with nano and replace:
+If your data center or VPS provider offers an NTP service use their NTP server. Open up /etc/ntp.conf with nano and replace:
 
   server 0.debian.pool.ntp.org iburst dynamic
   server 1.debian.pool.ntp.org iburst dynamic
@@ -15,11 +15,13 @@ with
 
   server ADDRESS-OF-NTP-SERVER-YOU-WANT-TO-USE
 
+You should have at least two servers in the ''ntp.conf''.
+
 After saving the changes you have to restart the NTP service by running
 
   invoke-rc.d ntp restart
 
-''invoke-rc.d'' is Debians shortcut to /etc/init.d/. You can run ''/etc/init.d/ntp restart'' as well.
+Note: ''invoke-rc.d'' is Debians shortcut to /etc/init.d/. You can run ''/etc/init.d/ntp restart'' as well.
 
 You can examine if the NTP server is working as expected if you run the ''ntpq -p'' command:
 
