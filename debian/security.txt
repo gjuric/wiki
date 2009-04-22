@@ -1,5 +1,5 @@
 ====== Security ======
 
-For securing our Debian box, we are going to use a firewalla and an intrusion detection system.
+For securing our Debian box, we are going to use a firewall and an intrusion detection system.
 
 For securing information coming from and to our server (email passwords and alike) we are going to talk about creating server certificates which we will implement on our web and mail server.
