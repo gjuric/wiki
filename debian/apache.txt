@@ -84,7 +84,30 @@ All that is left to do is to restart Apache once again
 
 Since log files for every domain are located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
 
-... TODO ...
+Create a file ''/etc/logrotate.d/apache2-virtual'' and for each virtual domain you have you have to create a section that looks like this:
+
+<file>
+/home/www/example.com/logs/*.log {
+        weekly   
+        missingok
+        rotate 52 
+        compress  
+        delaycompress
+        notifempty
+        create 644 www-data www-data
+        sharedscripts
+        prerotate
+                /usr/lib/cgi-bin/awstats.pl -config=example.com -update
+        endscript
+        postrotate
+                if [ -f "`. /etc/apache2/envvars ; echo ${APACHE_PID_FILE:-/var/run/apache2.pid}`" $
+                        /etc/init.d/apache2 reload > /dev/null
+                fi   
+        endscript 
+}
+</file>
+
+This will rotate log files for the domain, and it will run awstats update script before rotating log files so we do not loose any statistical information.
 
 ===== Install and configure Awstats =====
 
