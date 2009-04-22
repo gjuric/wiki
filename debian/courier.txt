@@ -42,6 +42,7 @@ MYSQL_GID_FIELD 5000
 MYSQL_LOGIN_FIELD username
 MYSQL_HOME_FIELD "/home/vmail"
 MYSQL_MAILDIR_FIELD CONCAT(SUBSTRING_INDEX(username,'@',-1),'/',SUBSTRING_INDEX(username,'@',1),'/')
+MYSQL_QUOTA_FIELD concat(quota,'S')
 </file>
 
 ===== Configure Courier to user our certificates =====
