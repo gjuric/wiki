@@ -49,4 +49,4 @@ Save the settings.
 
 If you get an error stating ''Failed to save enabled features : MySQL does not appear to be installed and running on your system, or has not yet been set up properly in Webmin's MySQL Database module. If your system does not use MySQL, it should be disabled in Virtualmin's module configuration page.''. Click on the MySQL Database and click on the Start MySQL server, return to Virtualmin and repeat the previous step.
 
-Click on the **Re-check and refresh configuration on the main page of the Virtualmin module and you should get a message ''your system is ready for use by Virtualmin.''.
+Click on the **Re-check and refresh configuration** on the main page of the Virtualmin module and you should get a message ''your system is ready for use by Virtualmin.''.
