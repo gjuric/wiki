@@ -253,3 +253,9 @@ To learn what is not spam run sa-learn in the folder that only contains your non
   sa-learn --no-sync --ham /home/vmail/example.com/demo/cur
 
 Bayes filtering will be used once you train SA on more than 200 spam and ham messages.
+
+To update SpamAssassin run
+
+  sa-update -D
+
+"-D" is for debug.
