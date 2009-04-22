@@ -45,6 +45,10 @@ MYSQL_MAILDIR_FIELD CONCAT(SUBSTRING_INDEX(username,'@',-1),'/',SUBSTRING_INDEX(
 MYSQL_QUOTA_FIELD concat(quota,'S')
 </file>
 
+Notice that the QUOTE_FIELD has an "S" appended to the value. This is because Postfix Admin stores MailDir quota as an integer, and Courier maildrop expects the quota value to be in the format XXXS, where XXX represent the number of bytes that can be stored in the Maildir, and "S" stands for size. 
+
+Maildrop can also use XXXC, where "C" I guess stands for "COUNT" because this value stands for number of messages that MailDir can store.
+
 ===== Configure Courier to user our certificates =====
 
   nano /etc/courier/imapd-ssl
