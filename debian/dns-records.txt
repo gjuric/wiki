@@ -10,7 +10,7 @@ First, we need to check our hostname
 If hostname did not return FQDN of your server edit ''/etc/hosts''. You should see something like this, if not, change according to your IP address and server name.
 
   127.0.0.1         localhost
-  YOUR-IP-ADDRESS   atlantis.example.com
+  YOUR-IP-ADDRESS   atlantis.example.com    atlantis
 
 Now check your ''/etc/hostname'' file:
 
