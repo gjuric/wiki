@@ -64,10 +64,12 @@ To restart Courier you have to restart couple of services
   /etc/init.d/courier-imap restart
   /etc/init.d/courier-imap-ssl restart
 
-And if you have installed POP3 as well
+And if you have it installed POP3 as well
 
   /etc/init.d/courier-pop restart
   /etc/init.d/courier-pop-ssl restart
+
+If you would like users of every virtual domain on your server to connect to mail.their-domain.com instead of to atlantis.example.com you will have to sign new certificates for every domain and also use a separate IP address for each virtual host. Information on placing certificates for various hosts can be found in ''/etc/courier/imapd-ssl''.
 
 ===== Courier firewall rules =====
 
