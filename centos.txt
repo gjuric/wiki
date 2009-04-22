@@ -32,11 +32,13 @@ Select Webmin -> Webmin Configuration -> Webmin Modules and install the Virtualm
 
 Select Servers -> Virtualmin Virtual Servers (GPL) and click on the ''Module Config'' at the top of the page and look for the section **Webmin modules available to server administrators**.
 
-Disable everything except ''Apache Webserver (for virtual host)'' & ''MySQL Database Server (for database)'' and Save.
+Disable everything except ''Apache Webserver (for virtual host)'', ''MySQL Database Server (for database)'' & ''Webalizer Logfile Analysis (for website's logs)'' and Save.
 
 Click on the **Edit Server Temapltes** button and the select ''Default Settings''.
 
 Edit template section: Apache website, look for ''Automatically add appropriate SuExec directive?'' and select **No** and Save.
+
+Select ''Un-used Modules'' -> ''Webalizer Logfile Analysis'' and select to install module using Yum.
 
 Click on ''Servers'' -> ''Virtualmin Virtual Servers (GPL)'' again and click on the ''Features and plugins'' icon and deselect everything except:
 
@@ -44,6 +46,7 @@ Click on ''Servers'' -> ''Virtualmin Virtual Servers (GPL)'' again and click on 
   * Log file rotation
   * MySQL database
   * Webmin login
+  * Webalizer reporting
 
 Save the settings.
 
