@@ -1,7 +1,7 @@
 ====== Courier ======
 ===== Installation =====
 
-To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you can run:
+To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you run:
 
   apt-get install courier-authdaemon courier-authlib-mysql courier-pop courier-pop-ssl courier-imap courier-imap-ssl
 
