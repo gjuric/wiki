@@ -218,5 +218,5 @@ Important: If you store all awstats information for you virtual domains in the s
 
 If you need HTTPS access to your virtual hosts you will have to:
   - create a certificate for the virtual domain that you want to serve using HTTPS
-  - add a new <VirtualHost> section into you ''/etc/apache2/sites-available/domain'' file (you can use the content from ''default-ssl'' as a template for this section)
+  - add a new <VirtualHost> section into your ''/etc/apache2/sites-available/domain'' file (you can use the content from ''default-ssl'' as a template for this section)
   - open port 443 on your firewall
