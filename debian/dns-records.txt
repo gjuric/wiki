@@ -28,7 +28,7 @@ We are going to use ''host'' to check information about our domain:
   example.com has address YOUR-IP-ADDRESS
   example.com mail is handled by 0 mail.example.com.
 
-We can see, that the mail for our domain is handled by mail.example.com. Now we must make sure that mail.example.com point to the same address as our server (atlantis.example.com).
+We can see, that the mail for our domain is handled by mail.example.com. Now we must make sure that mail.example.com points to the same address as our server (atlantis.example.com).
 
   atlantis:~# nslookup mail.example.com
   Server:         YOUR-DNS-SERVER
