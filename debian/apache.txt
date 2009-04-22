@@ -107,7 +107,19 @@ Create a file ''/etc/logrotate.d/apache2-virtual'' and for each virtual domain y
 }
 </file>
 
-This will rotate log files for the domain, and it will run awstats update script before rotating log files so we do not loose any statistical information.
+This will rotate log files for the domain, and it will run awstats update script before rotating log files so we do not loose any statistical information. Details about installing awstats are in the next section.
+
+You have to change the location of the log file for every domain you host, and change ''-config=example.com'' to match the awstats identifier.
+
+Note: If you do not want to use awstats, delete
+
+<code>
+        prerotate
+                /usr/lib/cgi-bin/awstats.pl -config=example.com -update
+        endscript
+</code>
+
+from the file.
 
 ===== Install and configure Awstats =====
 
