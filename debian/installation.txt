@@ -12,7 +12,7 @@ Grab a cup of coffee and wait until installation finishes fetching packages from
 
 Enter your root password. This is a password for root user who has all the privileges on the system, so choose one carefully. After that, you have to create a new user for the system.
 
-You will be asked if you want to participate in the Debians popularity contest which collects information about most used packages. Feel free to answer whatever you like, by choosing Yes you are helping the Debian community to find the most used packages in the distribution. Help them out, it doesn't cost you a thing.
+You will be asked if you want to participate in the Debians popularity contest which collects information about most used packages. Feel free to answer whatever you like, by choosing Yes you are helping Debian community to find the most used packages in the distribution. Help them out, it doesn't cost you a thing.
 
 When prompted to select collections of software packages deselect everrything. We just need to install the base system because we will add all needed packages when and if we need them.
 
