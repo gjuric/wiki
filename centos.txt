@@ -1,0 +1,52 @@
+Install CentOS using the net install disk.
+
+Log into your box and first remove CUPS:
+
+  yum remove cups
+
+We are going to use Atomis repository for PHP, MySQL and alike, because CentOS ships with the very old version of PHP.
+
+  wget -q -O - http://www.atomicorp.com/installers/atomic.sh | sh
+
+  Enable Plesk repository? (y/n) [Default: n]: n
+
+Install PHP
+
+  yum install php mysql mysql-server
+
+Download the latest version of Webmin from http://www.webmin.com/download.html
+
+  wget http://prdownloads.sourceforge.net/webadmin/webmin-1.470-1.noarch.rpm
+
+Install Webmin
+
+  rpm -i webmin-1.470-1.noarch.rpm
+
+Download Virtualmin as a Webmin module from http://www.webmin.com/vdownload.html
+
+Kill iptables so we can access our Webmin installation at http://YOUR-IP-ADDRESS:10000
+
+Log into Webmin with username ''root'' and roots password.
+
+Select Webmin -> Webmin Configuration -> Webmin Modules and install the Virtualmin module.
+
+Select Servers -> Virtualmin Virtual Servers (GPL) and click on the ''Module Config'' at the top of the page and look for the section **Webmin modules available to server administrators**.
+
+Disable everything except ''Apache Webserver (for virtual host)'' & ''MySQL Database Server (for database)'' and Save.
+
+Click on the **Edit Server Temapltes** button and the select ''Default Settings''.
+
+Edit template section: Apache website, look for ''Automatically add appropriate SuExec directive?'' and select **No** and Save.
+
+Click on ''Servers'' -> ''Virtualmin Virtual Servers (GPL)'' again and click on the ''Features and plugins'' icon and deselect everything except:
+
+  * Apache website
+  * Log file rotation
+  * MySQL database
+  * Webmin login
+
+Save the settings.
+
+If you get an error stating ''Failed to save enabled features : MySQL does not appear to be installed and running on your system, or has not yet been set up properly in Webmin's MySQL Database module. If your system does not use MySQL, it should be disabled in Virtualmin's module configuration page.''. Click on the MySQL Database and click on the Start MySQL server, return to Virtualmin and repeat the previous step.
+
+Click on the **Re-check and refresh configuration on the main page of the Virtualmin module and you should get a message ''your system is ready for use by Virtualmin.''.
