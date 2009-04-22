@@ -18,7 +18,7 @@ After installation finishes check if Postfix is runing by connecting to port 25 
 
 Note: Type **quit** to exit.
 
-If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your other email account:
+If you see Postfix responding, Postfix is working. For another check we can try to send email to one of your email accounts:
 
   mail your-other-email@somedomain.com
 
@@ -75,7 +75,6 @@ recipient_delimiter = +
 inet_interfaces = all
 </file>
 
-
 If your hostname is something like atlantis.example.com and not just example.com you can change ''myorigin = /etc/mailname'' to
 
   myorigin = $mydomain
@@ -107,13 +106,13 @@ It is important that the vmail user can not login and belongs to vmail group. We
 
 ===== Postfix and MySQL =====
 
-Not, it is time to install some more packages
+Install some more packages
 
   apt-get install postfix postfix-mysql mysql-server postfix-tls libsasl2-2 libsasl2-modules libsasl2-modules-sql sasl2-bin libpam-mysql openssl telnet mailx
 
 Do not bother with the packages we already installed, they will be skipped.
 
-As we sad that, we are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL so we need to create database and tables in the MySQL.
+We are going to use Postfix Admin for managing the virtual mail users and domains in the MySQL so we need to create database and tables in the MySQL.
 
 Download Postfix Admin using wget. Currently the latest version is 2.3RC3 (check the Postfix Admin site for the latest version).
 
@@ -201,28 +200,8 @@ dbname = mail
 table = domain
 select_field = domain
 where_field = domain
-#additional_conditions = and backupmx = '0' and active = '1'
+additional_conditions = and backupmx = '0' and active = '1'
 </file>
-
-mysql_virtual_mailbox_limit_maps.cf
-<file>
-ser = mailadmin
-password = newpassword
-hosts = 127.0.0.1
-dbname = mail
-user = postfix
-password = postfixpassword
-hosts = 127.0.0.1
-dbname = postfix
-table = mailbox
-select_field = quota
-where_field = username
-#additional_conditions = and active = '1'
-</file>
-
-Note: We are not going to use mailbox limits because for this to work we should patch Postfix with a quota patch before installing. Since we are building a server for our personal use I do not really see the need for quotas. If you need them, there are a lot of resources on the internet that explain how to download source packages of Postfix, apply the quota patch and set quota for users.
-
-I am leaving this here, if somebody needs it.
 
 mysql_virtual_mailbox_maps.cf
 <file>
@@ -233,7 +212,7 @@ dbname = mail
 table = mailbox
 select_field = maildir
 where_field = username
-#additional_conditions = and active = '1'
+additional_conditions = and active = '1'
 </file>
 
 Although most of the guides on the net use this file, I do not like it because mailboxes for all virtual domains are saved in /home/vmail/username@domain.com . I like to separate my domain so that every domain has its own folder: ''/home/vmail/domain.com/username''. So we are going to change this file to:
@@ -246,6 +225,8 @@ dbname = mail
 table = mailbox
 query = SELECT CONCAT(domain,'/',SUBSTRING_INDEX(maildir,'@',1),'/') FROM mailbox WHERE username='%s' AND active = 1
 </file>
+
+TODO: Postfix Admin can be configure do store paths to maildirs in a ''/domain/user'' format. I need to change this in the tutorial to use the simpler version of the query.
 
 /etc/postfix/mysql_relay_domains_maps.cf
 <file>
@@ -266,19 +247,23 @@ Since these files contain passwords, we need to protect them:
 
 Edit /etc/postfix/main.cf and at the bottom of the file add:
 
-  # Virtual Mailbox Domain Settings
-  
-  virtual_alias_maps = mysql:/etc/postfix/mysql_virtual_alias_maps.cf
-  virtual_mailbox_domains = mysql:/etc/postfix/mysql_virtual_domains_maps.cf
-  virtual_mailbox_maps = mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
-  virtual_mailbox_limit = 51200000
-  virtual_minimum_uid = 5000
-  virtual_uid_maps = static:5000
-  virtual_gid_maps = static:5000
-  virtual_mailbox_base = /home/vmail
-  virtual_transport = virtual
+<file>
+# Virtual Mailbox Domain Settings
 
-You also need to delete everything after ''mydestination='' directive.
+virtual_mailbox_base = /home/vmail
+virtual_transport = virtual
+virtual_alias_maps = mysql:/etc/postfix/mysql_virtual_alias_maps.cf
+virtual_mailbox_domains = mysql:/etc/postfix/mysql_virtual_domains_maps.cf
+virtual_mailbox_maps = mysql:/etc/postfix/mysql_virtual_mailbox_maps.cf
+virtual_minimum_uid = 5000
+virtual_uid_maps = static:5000
+virtual_gid_maps = static:5000
+
+# Domains for which we are a secondary MX
+relay_domains = mysql:/etc/postfix/mysql_relay_domains_maps.cfl
+</file>
+
+You also need to delete everything in the ''mydestination='' directive because every domain that is entered in the ''mydestionation'' is treated as a "local" domain so the mail gets delivered to the local server users and it is located in ''/var/spool/mail''.
 
 Restart postfix
 
@@ -338,7 +323,7 @@ sql_hostnames: 127.0.0.1
 sql_user: mailadmin
 sql_passwd: newpassword
 sql_database: mail
-sql_select: select password from mailbox where username = '%u'
+sql_select: select password from mailbox where username = '%u' and active = '1'
 </file>
 
 We need to add Postfix to the sasl group so it can access the saslauthd process we just setup:
@@ -375,7 +360,7 @@ Restart Postfix and sasl
 
 ===== TLS =====
 
-Now, we are going to configure Postfix to use TLS. If you still haven't created a self signed certificates do it now.
+Now, we are going to configure Postfix to use TLS. If you still haven't created a self signed certificates [[Server certificates|do it now]].
 
 Edit ''/etc/postfix/main.cf'' and look for the part containing:
 
@@ -403,7 +388,7 @@ Note: ''/etc/ssl/self-signed/server.pem'' should point to the location of your .
 
 We are telling Postfix that we want to allow sending emails without authentication for our networks (localhost) and for users that authenticated using sasl we configured previously.
 
-Restart Postfix and try to send an email user your email client from your workstation. You will not be able to read emails yet. Just make sure for username you are using the your email address, that you selected to use authentication for your SMTP server and that TLS is selected. (Note: change the firewall rules before).
+Restart Postfix and try to send an email using your email client from your workstation. You will not be able to read emails yet. Just make sure that username you are using is your full email address, that you've selected to use authentication for your SMTP server and that TLS is selected. (Note: change the firewall rules before).
 
 ===== Enable submission port =====
 
