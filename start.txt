@@ -25,6 +25,12 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Subversion]]
     - [[Redmine]]
 
+====== CentOS ======
+
+How to setup a CentOS server with Webmin and Virtualmin for serving web pages only.
+
+  - [[CentOS|Webmin]] - Webmin setup
+
 ====== Croatian ======
 
   * [[hr:Debian]] - kako instalirati Linux server koristeći Debian distribuciju, podesiti web server, DNS, DC hub, Jabber, ...
