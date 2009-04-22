@@ -9,13 +9,13 @@ To install PHP and mod_php module for Apache you have to run
 
 If you do not need ImageMagick you can remove imagemagick and php5-imagick form the list. I use them because PHP Imagick extension provides a nice object oriented API to ImageMagick library.
 
-php5-pspell installs aspell for spell checking purposes, which install aspell-en dictionary. If you need some other dictionaries for your PHP applications install them as well.
+php5-pspell installs aspell for spell checking purposes, which installs aspell-en dictionary. If you need some other dictionaries for your PHP applications install them as well.
 
 To check for available language dictionaries type:
 
   apt-cache search aspell-
 
-A need Croation dictionary so I have to install it:
+A need Croation dictionary so I have to install the croatian package:
 
   apt-get install aspell-hr
 
