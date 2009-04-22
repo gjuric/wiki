@@ -146,33 +146,37 @@ iptables -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 iptables-save > iptables.rules
 #
 echo ""
-echo "Check your rules - iptables -L -n"
+echo "Check your rules - iptables -L -n and move the iptables.rules to appropriate place"
 echo ""
 </file>
 
-There are two important things your have to do. First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I want to have access to everything when I am in my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet.
+There are two important things your have to do. 
 
-The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to respond to ICMP echo requests so we can use ''ping'' to establish if our server is alive.
+First replace the MY_IP with the IP address of your server. I am also using the ROUTER variable to configure the IP address that can bypass firewall rules because I want to have access to everything when I am on my network. My network is behind a NAT so the ROUTER IP is the IP address that the server sees when I connect to the server from within my company. I am using this because I do not want to open up SSH access to my server from the internet and I want to have access to everything when I am at my company.
 
-If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. If that is the case, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box ([[http://en.wikipedia.org/wiki/Port_knocking|port knocking]]) but they are out of the scope of this article.
+The script is very well documented and you just have to comment out the services you want to make accessible from the internet. In this case we are only opening up port 80 which is used for incoming connections to our Apache web server and we also tell iptables to pass through ICMP echo requests so we can use ''ping'' to establish if our server is alive.
+
+If you don't have a "safe" IP address to allow access to your machine make sure you un-comment the rule for SSH (port 22), or you will not be able to connect to the machine using SSH. 
+
+If you need access to SSH from the internet, open up ''/etc/ssh/sshd_config'' and change Port from 22 to something else, and make sure you update the new port number in the firewall script. You can also consider some other techniques to secure your box ([[http://en.wikipedia.org/wiki/Port_knocking|port knocking]]) but they are out of the scope of this article.
 
 Copy the script to /root/firewall.sh , cd into the /root directory and run
 
   sh ./firewall.sh
 
-In case you don't get your prompt back, you did something wrong. Connect to the server, reboot it and try again.
+In case you don't get your prompt back, you did something wrong. Connect to the server (most VPS providers offer some kind of root access in case you lock down your box), reboot it and try again.
 
 You can now check your rules by using ''iptables -L -n'' and they should not be empty anymore.
 
-The problem is that if you reboot your server now zou will lost all iptables rules. We have apply these rules whenever our server is rebooted.
+The problem is that if you reboot your server now you will lose all of the iptables rules. We have to apply these rules whenever our server is rebooted.
 
-The script populated the rules, but it also created a file called iptables.rules in our /root directory.
+The script populated fed the rules to iptables, but it also created a file called iptables.rules in our /root directory.
 
 We are going to copy this file to the /etc/network folder.
 
   cp /root/iptables.rules /etc/network/
 
-Now we need to edit the /etc/network/interfaces file. Use nano to open it and add
+Now we need to edit the ''/etc/network/interfaces'' file. Use nano to open it and add
 
   pre-up iptables-restore < /etc/network/iptables.rules
 
@@ -183,3 +187,13 @@ Reboot your server with
   reboot
 
 and when it comes back up log in and check your iptables rules again with ''iptables -L -n''. They should not be empty, if they are, you are doing something wrong.
+
+===== Updating firewall rules =====
+
+When you add services to your server you need to open appropriate ports in you firewall. Edit the ''firewall.sh'' script and make the changes in the script.
+
+After you save the file you have to run the script again, and copy the rules to your ''/etc/network'' folder.
+
+  cd /root
+  sh firewall.sh
+  cp iptables.rules /etc/network/iptables.rules
