@@ -1,6 +1,6 @@
 ====== Apache ======
 
-We are going to use Apache mod_php for running PHP scripts so we need to install apache2-mpm-preform MPM because MPM worked does not play nicely with mod_php because PHP is not thread save. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
+We are going to use Apache mod_php for running PHP scripts so we need to install apache2-mpm-preform MPM. MPM worker does not play nicely with mod_php because PHP is not thread safe. mod_php is the fastest way of running PHP sites so you dont really need to think to much over this option. If you are low on memory resources you could install Lighttpd and run PHP as a FastCGI but then I guess you do not want to install Postfix or use the same machine as a mail server, so skip installing Postfix as well.
 
   apt-get install apache2 apache2-mpm-prefork apache2-utils ssl-cert
 
@@ -9,15 +9,15 @@ mod_rewrite is not enabled by default so we will enable it and restart Apache
   a2enmod rewrite
   invoke-rc.d apache2 restart
 
-Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see "It works!" displayed in your browser if Apache is working normaly.
+Open up your web browser and try to visit http://YOUR-IP-ADDRESS you should see "It works!" displayed in your browser if Apache is working normally.
 
-If you can not access the page, check your firewall rules that the port 80 is open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
+If you can not access the page, check your firewall rules. Port 80 should be open. If not, rebuild the firewall rules making sure that this time the port 80 is open, copy them to /etc/network/iptables.rules and reboot your server.
 
 ===== Configure Virtual Hosts =====
 
-Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]].
+Since we only have one IP address we are going to use Apaches [[http://httpd.apache.org/docs/2.2/vhosts/name-based.html|name-based virtual hosting]] for serving multiple domains from a single server.
 
-Configuration files for sites that Apache server are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are located in ''/etc/apache2/sites-enabled''.
+Configuration files for sites are located in ''/etc/apache2/sites-available'' and symbolic links for active sites are created in ''/etc/apache2/sites-enabled''.
 
 Now, we are going to create a configuration file for out example.com domain. Create an example.com in ''/etc/apache2/sites-available'' using ''nano /etc/apache2/sites-available/example.com'' and save this in the file:
 
@@ -40,7 +40,7 @@ Now, we are going to create a configuration file for out example.com domain. Cre
 </VirtualHost>
 </file>
 
-You can see that the DocumentRoot points to ''/home/www/...''. This is because I choose to save all my sites in the ''/home/www'' folder in which where every domain has its own folder.
+You can see that the DocumentRoot points to ''/home/www/...''. This is because I choose to save all my sites in the ''/home/www'' folder in which every domain has its own folder.
 
 Since those folders for our domain still don't exist, we need to create them
 
@@ -64,7 +64,7 @@ If you want to add other sites to your server, just create another file in the '
 
 ===== Apache configuration =====
 
-Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable thiso pen /etc/apache2/conf.d/security with nano and replace
+Default configuration of Apache sends server information in the response headers that we do not want to expose to everybody. To disable this open /etc/apache2/conf.d/security with nano and replace
 
   ServerTokens Full
   ServerSignature On
@@ -74,15 +74,15 @@ with
   ServerTokens Prod
   ServerSignature Off
 
-All application on my web server use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which add the UTF-8 as the default charset in the header for all the content Apache sends to clients.
+All application on my web server use UTF-8 as a default encoding so I also edit /etc/apache2/conf.d/charset and uncomment the ''AddDefaultCharset UTF-8'' directive which adds the UTF-8 as the default charset to the header for all files Apache sends to clients.
 
-All that is left to do, is to restart Apache
+All that is left to do is to restart Apache once again
 
   update-rc.d apache2 restart
 
 ===== Rotate logs for virtual domains =====
 
-Since log files for every domain Apache serves is located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
+Since log files for every domain are located in the /home/www/DOMAIN-NAME/logs we need to make appropriate changes to the **logrotate** utility which is used for rotating log files.
 
 ... TODO ...
 
@@ -93,14 +93,16 @@ Since log files for every domain Apache serves is located in the /home/www/DOMAI
 Configure awstats
 
   cd /usr/share/doc/awstats/examples/
-  gunzip gunzip awstats.model.conf.gz
+  gunzip awstats.model.conf.gz
   cp awstats.model.conf /etc/awstats/
   mkdir wwwroot
   mkdir wwwroot/cgi-bin
   cp awstats.model.conf wwwroot/cgi-bin/
   perl awstats_configure.pl
 
-Copying ''awstats.model.con'' to ''/etc/awstats/'' is needed because this file is referenced from the ''awstats_configure.pl'' script, but somebody forgot to put it there when they were packaging awstats for Debian.
+Copying ''awstats.model.conf'' to ''/etc/awstats/'' is needed because this file is referenced from the ''awstats_configure.pl'' script, but somebody forgot to put it there when they were packaging awstats for Debian.
+
+Run the awstats configuration script:
 
 <code>
 atlantis:/usr/share/doc/awstats/examples# perl awstats_configure.pl
@@ -188,21 +190,10 @@ Run awstats
 
   /usr/lib/cgi-bin/awstats.pl -update -config=default
 
-<del>
-edit ''/etc/apache2/sites-available/default'' and add
+This will run awstats for the default profile. Default profile takes care of the log files that are used when serving content from the ''/var/www''. Since, you probably will just use virtual domains you have to create a separate awstats config file for each domain. Just make sure that every domain has a different answer for ''Your web site, virtual server or profile name:'' question.
 
-<file>
-# Awstats specific
+You will also have to edit config file for each domain (located in ''/etc/awstats'') and change the location to the config file.
 
-Alias /icon/ /usr/share/awstats/icon/
-<Directory /usr/share/awstats/icon>
-Options None
-AllowOverride None
-Order allow,deny
-Allow from all
-</Directory>
-</file>
-</del>
 
 Awstats package has created a cron job that should generate logs for awstats regularly, but it doesn't fit our needs, so we are going to edit it, open ''/etc/cron.d/awstats'' and replace
 
@@ -213,6 +204,19 @@ with an entry for every one of our domains
   0,10,20,30,40,50 * * * * www-data /usr/lib/cgi-bin/awstats.pl -config=default -update >/dev/null
 
 
+The is also alo a script in ''/usr/share/doc/awstats/examples/awstats_updateall.pl'' that you can use to update all domains at once.
+
+To display data awstats created fetch the latest version of [[http://www.jawstats.com/|Jawstats]] and unpack it somewhere in you domains public_html folder. Copy ''config.dist.php'' to ''config.php'' and add all the domains you want Jawstats to fetch information from the database awstats creates.
+
+Important: If you store all awstats information for you virtual domains in the same place. One user of the server will be able to edit ''config.php'' and view statistics for other domain. If this is an issue for you, you should change awstats domain configuration files and point ''DirData'' for each domain to a separate folder. You could for example create ''awstats'' inside every ''/home/www/domain''. Youd would then have 3 folders inside every ''/home/www/domain'' directory
+
+  * logs - raw access and error log files from Apache
+  * public - place to put your web site in (this is the folder Apache looks in when serving pages)
+  * awstats - awstats database (processed Apache log files)
+
 ===== Configure HTTPS =====
 
-.... TODO ....
+If you need HTTPS access to your virtual hosts you will have to:
+  - create a certificate for the virtual domain that you want to serve using HTTPS
+  - add a new <VirtualHost> section into you ''/etc/apache2/sites-available/domain'' file (you can use the content from ''default-ssl'' as a template for this section)
+  - open port 443 on your firewall
