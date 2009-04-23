@@ -15,6 +15,11 @@ Install PHP and MySQL
   yum install php mysql mysql-server php-mysql php-bcmath php-cli php-common php-devel / 
   php-gd php-imap php-mbstring php-mcrypt php-mhash php-pdo php-pear php-soap php-tidy /
   php-xml php-xmlrpc
+
+Run Apache and mysql when started
+
+  chkconfig --level 35 httpd on
+  chkconfig --level 35 mysqld on
  
 Download the latest version of Webmin from http://www.webmin.com/download.html
 
