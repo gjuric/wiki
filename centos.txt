@@ -21,6 +21,10 @@ Run Apache and mysql when started
   chkconfig --level 35 httpd on
   chkconfig --level 35 mysqld on
  
+Disable SELinux
+
+
+
 Download the latest version of Webmin from http://www.webmin.com/download.html
 
   wget http://prdownloads.sourceforge.net/webadmin/webmin-1.470-1.noarch.rpm
