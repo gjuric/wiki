@@ -4,17 +4,17 @@ Log into your box and first remove CUPS:
 
   yum remove cups
 
-We are going to use Atomis repository for PHP, MySQL and alike, because CentOS ships with the very old version of PHP.
+We are going to use Atomic repository for PHP, MySQL and alike, because CentOS ships with the very old version of PHP.
 
   wget -q -O - http://www.atomicorp.com/installers/atomic.sh | sh
 
   Enable Plesk repository? (y/n) [Default: n]: n
 
-Install PHP
+Install PHP and MySQL
 
-  yum install php mysql mysql-server
-
-  yum install php-mysql php-bcmath php-cli php-common php-devel php-gd php-imap php-mbstring php-mcrypt php-mhash php-pdo php-pear php-soap php-tidy php-xml php-xmlrpc
+  yum install php mysql mysql-server php-mysql php-bcmath php-cli php-common php-devel / 
+  php-gd php-imap php-mbstring php-mcrypt php-mhash php-pdo php-pear php-soap php-tidy /
+  php-xml php-xmlrpc
  
 Download the latest version of Webmin from http://www.webmin.com/download.html
 
