@@ -20,6 +20,7 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Debian:Postfix]]
     - [[Debian:Courier]]
     - [[Debian:Anti-spam & Anti-virus]]
+    - [[Debian:Maildrop]]
     - [[Debian:Webmail]]
   - Other services
     - [[Subversion]]
