@@ -17,7 +17,7 @@ If you check iptables rules with ''iptables -L'' you should see a clean chain li
   target     prot opt source               destination
 
 To help us set up iptables rules we are going to use a modified version of a firewall script that is used for setting up QmailToaster on CentOS, the script looks like this:
-<file>
+<code bash>
 #!/bin/sh
 #
 # Fedora Core 2
@@ -148,7 +148,7 @@ iptables-save > iptables.rules
 echo ""
 echo "Check your rules - iptables -L -n and move the iptables.rules to appropriate place"
 echo ""
-</file>
+</code>
 
 There are two important things your have to do. 
 
