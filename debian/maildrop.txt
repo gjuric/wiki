@@ -10,7 +10,7 @@ To install maildrop, run
 
 Maildrop config file is located at ''/etc/maildroprc'', open it and replace the content with:
 
-<file>
+<code bash>
 # Global maildrop filter file (used on Debian)
 # For use with Postfix/Courier IMAP/Amavisd-new virtual mailbox domains.
 #
@@ -83,7 +83,7 @@ if (/^X-Spam-Flag: YES/)
       }
    }
 }
-</file>
+</code>
 
 This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html 
 
@@ -172,7 +172,7 @@ Note: you can use some other file name if you like
 
 You can change it to look like this:
 
-<file>
+<code bash>
 [....]
 SENDER="$5"
 DEFAULT="$HOME_DIR/$HOST/$USER"
@@ -188,6 +188,6 @@ if ( $RETURNCODE == 0 )
 
 if (/^X-Spam-Flag: YES/)
 [...]
-</file>
+</code>
 
 All you have to do now is to put your rules in the mailfilter file.
