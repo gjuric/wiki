@@ -17,11 +17,13 @@ Enter MySQL with
 
 create database and user for Roundcube (chen ''newpassword'' to something else).
 
-  CREATE DATABASE ROUNDCUBE;
-  CREATE USER 'rounducbe'@'localhost' IDENTIFIED BY 'newpasswd';
-  FLUSH PRIVILEGES;
-  GRANT ALL PRIVILEGES ON roundcube.* TO 'roundcube'@'localhost';
-  FLUSH PRIVILEGES;
+<code mysql>
+CREATE DATABASE ROUNDCUBE;
+CREATE USER 'rounducbe'@'localhost' IDENTIFIED BY 'newpasswd';
+FLUSH PRIVILEGES;
+GRANT ALL PRIVILEGES ON roundcube.* TO 'roundcube'@'localhost';
+FLUSH PRIVILEGES;
+</code>
 
 Exit MySQL and populate the database with initial tables
 
