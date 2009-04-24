@@ -87,7 +87,7 @@ if (/^X-Spam-Flag: YES/)
 
 This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html 
 
-This script check for the ''X-Spam-Flag: YES'' header in the messages and delivers them to the Junk folder. It also checks if the users Maildir has a ''Junk'' folder, and it creates it if the folder does not exist.
+This script checks for the ''X-Spam-Flag: YES'' header in the messages and delivers them to the Junk folder. It also checks if the users Maildir has a ''Junk'' folder, and it creates it if the folder does not exist.
 
 Create the log file, and change ownership:
 
