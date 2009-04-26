@@ -1,8 +1,6 @@
 ====== Maildrop ======
 
-To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildir for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
-
-Note: this tutorial is half finished. Maildrop still doesn't check if the domain, and user folders exist.
+To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildirs for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
 
 To install maildrop, run
 
@@ -33,7 +31,6 @@ Maildrop config file is located at ''/etc/maildroprc'', open it and replace the 
 # /var/log/maildroprc.log needs to exist and owned by vmail:vmail and
 # a logrotate script needs to be created.
 #
-
 HOME_DIR="/home/vmail"
 logfile "/var/log/maildroprc.log"
 EXTENSION="$1"
@@ -41,47 +38,51 @@ RECIPIENT=tolower("$2")
 USER="$3"
 HOST="$4"
 SENDER="$5"
+DEFAULT="$HOME_DIR/$HOST/$USER"
+
+# Check if host and user directory exist
+
+`test -e $HOME_DIR/$HOST/$USER`
+#log "Testing for $HOME_DIR/$HOST subdirectory: result=$RETURNCODE"
+# Only continue if directory does NOT exist
+if ($RETURNCODE != 0)
+{
+        log "MailDir $HOME_DIR/$HOST/$USER does NOT exist"
+        `test -e $HOME_DIR/$HOST`
+        if ( $RETURNCODE != 0 )
+        {
+                log "Creating $HOME_DIR/$HOST"
+                `mkdir $HOME_DIR/$HOST`
+                `chmod -R 0700 $HOME_DIR/$HOST`
+        }
+
+        # Create users MailDir
+        `maildirmake $HOME_DIR/$HOST/$USER`
+}
 
 if (/^X-Spam-Flag: YES/)
 {
-   # Change 'spam' to 'Spam' since folder names are typically capitalized
-   EXTENSION = "Junk"
+        EXTENSION = "Junk"
 
-   # Autocreate extension maildir
-   #
-   # See if the user exists
-   `test -e $HOME_DIR/$HOST/$USER`
-   #log "Testing for $HOME_DIR/$HOST/$USER subdirectory: result=$RETURNCODE"
+        # See if the spam directory already exists
+        `test -e $HOME_DIR/$HOST/$USER/.$EXTENSION`
+        #log "Testing for $EXTENSION subdirectory: result=$RETURNCODE"
+        if ( $RETURNCODE != 0 ) # spam directory does not exist - so we create it
+        {
+                # Create the subdirectory
+                `maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER`
+                log "Ran \"maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER\""
 
-   # Only continue if user is valid
-   if ( $RETURNCODE == 0 )
-   {
-      # See if the spam directory already exists
-      `test -e $HOME_DIR/$HOST/$USER/.$EXTENSION`
-      #log "Testing for $EXTENSION subdirectory: result=$RETURNCODE"
+                # Auto-subscribe the subdirectory
+                `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
+        }
 
-      if ( $RETURNCODE != 0 ) # spam directory does not exist - so we create it
-      {
-
-         # Create the subdirectory
-         `maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER`
-         log "Ran \"maildirmake -f $EXTENSION $HOME_DIR/$HOST/$USER\""
-
-         # Auto-subscribe the subdirectory
-         `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
-
-         # Set permissions on the mailbox
-         `chmod -R 0700 $HOME_DIR/$HOST/$USER`
-         log " Ran \"chmod -R 0700 $HOME_DIR/$HOST/$USER\""
-      }
-
-      # Deliver the message to the mailbox
-      exception {
-      # for those who unsubscribed themselves - subscribe them
-     `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
-      to "$HOME_DIR/$HOST/$USER/.$EXTENSION"
-      }
-   }
+        # Deliver the message to the mailbox
+        exception {
+                # for those who unsubscribed themselves - subscribe them
+                `if ! grep -q INBOX.$EXTENSION $HOME_DIR/$HOST/$USER/courierimapsubscribed; then echo INBOX.$EXTENSION >> $HOME_DIR/$HOST/$USER/courierimapsubscribed; fi`
+                to "$HOME_DIR/$HOST/$USER/.$EXTENSION"
+        }
 }
 </code>
 
