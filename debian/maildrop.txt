@@ -192,8 +192,9 @@ You can change it to look like this:
 
 <code bash>
 [....]
-SENDER="$5"
-DEFAULT="$HOME_DIR/$HOST/$USER"
+        # Create users MailDir
+        `maildirmake $HOME_DIR/$HOST/$USER`
+}
 
 `test -e $DEFAULT/mailfilter`
 if ( $RETURNCODE == 0 )
