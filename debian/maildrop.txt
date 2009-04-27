@@ -200,8 +200,8 @@ You can change it to look like this:
 if ( $RETURNCODE == 0 )
 {
      exception {
-         log "Including $HOME_DIR/$HOST/$USER/.mailfilter..."
-         include "$HOME_DIR/$HOST/$USER/.mailfilter"
+         log "Including $HOME_DIR/$HOST/$USER/mailfilter..."
+         include "$HOME_DIR/$HOST/$USER/mailfilter"
      }
 }
 
