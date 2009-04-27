@@ -86,9 +86,10 @@ if (/^X-Spam-Flag: YES/)
 }
 </code>
 
-This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html 
+This script is a modified version of the script I took from http://www200.pair.com/mecham/spam/virtual.html and it does two things:
 
-This script checks for the ''X-Spam-Flag: YES'' header in the messages and delivers them to the Junk folder. It also checks if the users Maildir has a ''Junk'' folder, and it creates it if the folder does not exist.
+  - Creates the folders for the users mail on the server if they do not exist (this is the part that Postfix virtual delivery agent does automatically)
+  - Checks if the messages has the ''X-Spam-Flag: YES'' header and delivers the message to the Junk folder (it creates one if it doesn't exist)
 
 Create the log file, and change ownership:
 
@@ -127,6 +128,37 @@ and replace it with
     flags=ODRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
     ${extension} ${recipient} ${user} ${nexthop}
 
+This line invokes maildrop with some parameters. ''-w 90'' tells maildrop to copy the quota warning message if the user is over 90% of his mailbox quota.
+
+The quota warning message must be located in  ''/etc/quotawarnmsg'' and it should look something like this:
+
+<file>
+
+X-Comment: Rename/Copy this file to quotawarnmsg, and make appropriate changes
+X-Comment: See deliverquota man page for more information
+From: Mail Delivery System <postmaster@diabmon.com>
+Reply-To: postmaster@diabmon.com
+To: Valued Customer:;
+Subject: Mail quota warning
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 7bit
+
+Your mailbox on the server is now more than 90% full. So that you can continue to receive mail you need to remove some messages from your mailbox.
+</file>
+
+Todo: I don't get the body off the message, everything is in the headers, need to check this one out.
+
+Unfortunately Postfix Admin does not allow entering quota values, but id does create the needed columns in the database table ''mbox''. To enter quota values log into mysql and add the quota value for the mailbox you wish to have quota applied. Your mailbox should have something like this:
+
+<code>
+mysql> select * from mailbox;
++-----------------+----------+-------------+--------------------+-----------+------------+--------------+---------------------+---------------------+--------+
+| username        | password | name        | maildir            | quota     | local_part | domain       | created             | modified            | active |
++-----------------+----------+-------------+--------------------+-----------+------------+--------------+---------------------+---------------------+--------+
+| gog@diabmon.com | ommited  | Goran Juric | mail@example.com/  | 100000000 | mail       | example.com  | 2009-04-14 00:53:38 | 2009-04-14 00:53:38 |      1 |
+</code>
+
 
 Change the permissions on ''/var/lib/amavis/tmp''
 
@@ -141,26 +173,6 @@ Restart Postfix:
   /etc/init.d/postfix restart
 
 Send a test email to check that everything is working.
-
-===== Automatic creation of Maildirs =====
-
-TODO: Postfix admin can be configured to run scripts after mailbox creation. We can use this feature to automatically run ''maildirmake'' command to create users Maildirs (including the domain folder if this is the firs mailbox for the domain, as well as the ''Junk'' folder, and other folders that we can use with Roundube, like ''Trash'' and ''Sent'').
-
-For the imapatient, there is a script for this lcoated at http://www200.pair.com/mecham/spam/maildirmake.sh.txt but note, that this script also creates Maildir quotas and that in this tutorial we do not support quota, as this requires Postfix to be patched. If you want to create the Maildirs by hand, here is an example for a new domain example.com and a new mailbox for a user ''demo''.
-
-  cd /home/vmail
-  mkdir example.com
-  maildirmake demo
-  cd demo
-  maildirmake -f Junk
-  
-then edit ''/home/vmail/example.com/demo/courierimapsubscribed'' and add ''INBOX.Junk'' to the file. If you create ''Sent'' and ''Trash'' folders ''courierimapsubscribed'' should look like:
-
-<file>
-INBOX.Sent
-INBOX.Trash
-INBOX.Junk
-</file>
 
 ===== Per user filtering =====
 
