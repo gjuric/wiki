@@ -22,7 +22,7 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Debian:Maildrop]]
     - [[Debian:Webmail]]
   - Other services
-    - [[Subversion]]
+    - [[Debian:Subversion]]
     - [[Redmine]]
 
 ====== CentOS ======
