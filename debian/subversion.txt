@@ -16,6 +16,24 @@ To create a new repository named ''project1'' enter:
 
   svnadmin create /home/svn/project1
 
+Edit ''/home/svn/project1/conf/svnserve.conf'' and uncomment
+
+  anon-access = none
+  auth-access = write
+  password-db = passwd
+
+Edit ''/home/svn/project1/conf/passwd'' and enter usernames and passwords
+
+  [users]
+  username1 = password1
+  username2 = password2
+
+Change ownership of ''/home/svn'' to user svn
+
+  chown svn:svn -R /home/svn
+
+You will probably have to **chown** every new repository you create.
+
 To be able to access the repository from another computer we need to setup ''svnserve''.
 
 Create a new file ''/etc/init.d/svnserve'' and paste this into it:
