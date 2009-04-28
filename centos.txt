@@ -2,7 +2,8 @@ Install CentOS using the net install disk.
 
 Log into your box and first remove CUPS:
 
-  yum remove cups
+  yum remove cups avahi blues-libs cups-libs desktop-file-utils kudzu portmap ppp selinux-policy selinux-policy-targeted wpa_supplicant 
+
 
 We are going to use Atomic repository for PHP, MySQL and alike, because CentOS ships with the very old version of PHP.
 
