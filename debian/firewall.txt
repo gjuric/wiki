@@ -93,6 +93,9 @@ iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
 ## Accept http (port 80)
 iptables -A INPUT -p tcp -m tcp --syn --dport 80 -j ACCEPT
 #
+## Accept Subversion (port 3690)
+iptables -A INPUT -p tcp -m tcp --syn --dport 3690 -j ACCEPT
+#
 ## Accept pop3 (port 110)
 #iptables -A INPUT -p tcp -m tcp --syn --dport 110 -j ACCEPT
 #
