@@ -13,8 +13,8 @@ We are going to use Atomic repository for PHP, MySQL and alike, because CentOS s
 
 Install PHP and MySQL
 
-  yum install php mysql mysql-server php-mysql php-bcmath php-cli php-common php-devel / 
-  php-gd php-imap php-mbstring php-mcrypt php-mhash php-pdo php-pear php-soap php-tidy /
+  yum install php mysql mysql-server php-mysql php-bcmath php-cli php-common php-devel \ 
+  php-gd php-imap php-mbstring php-mcrypt php-mhash php-pdo php-pear php-soap php-tidy \
   php-xml php-xmlrpc
 
 Run Apache and mysql when started
