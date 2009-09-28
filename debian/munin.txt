@@ -1,6 +1,6 @@
 ====== Munin ======
 
-From the [[http://munin.projects.linpro.no/|Munins Homepage]]: 
+From the [[http://munin.projects.linpro.no/|Munin's Homepage]]: 
 
 Munin the monitoring tool surveys all your computers and remembers what it saw. It presents all the information in graphs through a web interface. Its emphasis is on plug and play capabilities. After completing a installation a high number of monitoring plugins will be playing with no more effort.
 
