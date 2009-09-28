@@ -8,6 +8,7 @@ Using Munin you can easily monitor the performance of your computers, networks, 
 
 ----
 
+
 Munin is made of two parts. Munin and Munin node. Munin is the server wich collects information from nodes (yes you can have one Munin server that monitors many nodes on your network). Munin node collects information from the machine and prepares them so Munin can collect them when needed. 
 
 In this case we are going to install both Munin and Munin node on the same machine.
@@ -50,13 +51,19 @@ and replace localhost.localdomain with your server domain.
 
 This line will list all the plugins that you could be using and the reasons why are they not used (if any). If you fix some of the to work you can run
 
-  munin-node-configure --suggest
+  munin-node-configure --shell
 
 to get a list you can copy paste to create symbolic links from the /usr/share/munin/plugins to /etc/munin/plugins for the plugins you can enable.
 
 If you do not want to use some of the plugins you can just unlink them from /etc/munin/plugins and delete their already collected data from /var/lib/munin/your-domain-name.
 
-Another file that munin-node uses is /etc/munin/plugin-conf.d/munin-node inside you can define special option (like username and group under which munin-node should run for diffren plugins for plugins. 
+Another file that munin-node uses is /etc/munin/plugin-conf.d/munin-node inside you can define special option (like username and group under which munin-node should run for different plugins for plugins.
+
+Restart munin-node with
+
+   invoke-rc.d munin-node restart
+
+and open up your browser and point it to http://your-ip-address/munin and you should see statistics which are updated every 5 minutes.
 
 You can find more plugins at the [[http://muninexchange.projects.linpro.no/|Munin Exchange]], a took the amavis-debian plugin from there but it took some work to make it work.
 
@@ -82,3 +89,15 @@ Open up /etc/munin/plugin-conf.d/munin-node and add
   group adm
 
 so that the plugin can open /var/log/mail.log file to create statistics.
+
+Restar munin-node
+
+   invoke-rc.d munin-node restart
+
+===== Troubleshooting =====
+
+If some of the plugins look like they do not work you can ran the manually 
+
+  sh /etc/munin/plugins/name-of-the-plugin
+
+to get some idea why the do not collect information.
