@@ -1,0 +1,84 @@
+====== Munin ======
+
+From the [[http://munin.projects.linpro.no/|Munins Homepage]]: 
+
+Munin the monitoring tool surveys all your computers and remembers what it saw. It presents all the information in graphs through a web interface. Its emphasis is on plug and play capabilities. After completing a installation a high number of monitoring plugins will be playing with no more effort.
+
+Using Munin you can easily monitor the performance of your computers, networks, SANs, applications, weather measurements and whatever comes to mind. It makes it easy to determine "what's different today" when a performance problem crops up. It makes it easy to see how you're doing capacity-wise on any resources. 
+
+----
+
+Munin is made of two parts. Munin and Munin node. Munin is the server wich collects information from nodes (yes you can have one Munin server that monitors many nodes on your network). Munin node collects information from the machine and prepares them so Munin can collect them when needed. 
+
+In this case we are going to install both Munin and Munin node on the same machine.
+
+  apt-get install munin munin-node
+
+Munin is going to be run from the cron every 5 minutes (package installer already created the cron job) and the munin-node is run as a service on the computer.
+
+Munin package on Debian Lenny has a bug and it does not create one of the folders needed for some of the plugins to work, so we are going to create it:
+
+  mkdir /var/lib/munin/plugin-state
+  chown munin:munin /var/lib/munin/plugin-state
+
+Plugins that munin-node can use to collect information from the system are located in /usr/share/munin/plugins but the plugins that are acctually been used are located in /etc/munin/plugins. Files in /etc/munin/plugins are actually symbolic links to the one in /usr/share/munin/plugins.
+
+First we will need to edit /etc/munin/munin.conf and look for the part:
+
+  [localhost.localdomain]
+  address 127.0.0.1
+  use_node_name yes
+
+and replace the localhost.localdomain with the name of your server.
+
+At the top of this file you will see a list of all the folders Munin uses:
+
+  dbdir   /var/lib/munin
+  htmldir /var/www/munin
+  logdir  /var/log/munin
+  rundir  /var/run/munin
+
+So if something stops working do check that user munin and group munin are the owners of this folders and all the files in them.
+
+Open /etc/munin/munin-node.conf and uncomment
+
+  host_name localhost.localdomain
+
+and replace localhost.localdomain with your server domain.
+
+  munin-node-configure --suggest
+
+This line will list all the plugins that you could be using and the reasons why are they not used (if any). If you fix some of the to work you can run
+
+  munin-node-configure --suggest
+
+to get a list you can copy paste to create symbolic links from the /usr/share/munin/plugins to /etc/munin/plugins for the plugins you can enable.
+
+If you do not want to use some of the plugins you can just unlink them from /etc/munin/plugins and delete their already collected data from /var/lib/munin/your-domain-name.
+
+Another file that munin-node uses is /etc/munin/plugin-conf.d/munin-node inside you can define special option (like username and group under which munin-node should run for diffren plugins for plugins. 
+
+You can find more plugins at the [[http://muninexchange.projects.linpro.no/|Munin Exchange]], a took the amavis-debian plugin from there but it took some work to make it work.
+
+===== Install plugin for amavis =====
+
+Download the script for amavis-debian from Munin Exchange, put it in the /usr/share/munin/plugins/amavis and make this file executable
+
+  chmod +x /usr/share/munin/plugins/amavis
+
+Create a symbolic link to the /etc/munin/plugins folder
+
+  cd /etc/munin/plugins
+  ln -s /usr/share/munin/plugins/amavis amavis
+
+For this amavis plugin to work you will have to install logtail tool
+
+  apt-get install logtail
+
+Open up /etc/munin/plugin-conf.d/munin-node and add
+
+  [amavis]
+  user root
+  group adm
+
+so that the plugin can open /var/log/mail.log file to create statistics.
