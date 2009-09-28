@@ -9,7 +9,7 @@ Using Munin you can easily monitor the performance of your computers, networks, 
 ----
 
 
-Munin is made of two parts. Munin and Munin node. Munin is the server wich collects information from nodes (yes you can have one Munin server that monitors many nodes on your network). Munin node collects information from the machine and prepares them so Munin can collect them when needed. 
+Munin is made of two parts. Munin and Munin node. Munin is the server which collects information from nodes (yes you can have one Munin server that monitors many nodes on your network). Munin node collects information from the machine and prepares them so Munin can collect them when needed. 
 
 In this case we are going to install both Munin and Munin node on the same machine.
 
