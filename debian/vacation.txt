@@ -17,7 +17,52 @@ Create a file /etc/postfix/transport
 
 and paste:
 
-  autoreply.mail.com        vacation:
+  autoreply.example.com        vacation:
+
+This is the domain that will be used for passing the mail to the vacation script.
+
+Edit /etc/hosts and add
+
+  your-ip-address   autoreply.example.com autoreply
+
+Hash the transport map
+
+  postmap /etc/postfix/transport
+
+Edit /etc/postfix/main.cf and add
+
+  transport_maps = hash:/etc/postfix/transport
+
+Add vacation transport to the /etc/postfix/master.cf
+
+  vacation    unix  -       n       n       -       -       pipe
+    flags=Rq user=vacation argv=/var/spool/vacation/vacation.pl -f ${sender} -- ${recipient}
+
+you also have to edit the amavis transport to add no_address_mappings in the receive_override_options so your transport for amavis should now look like this:
+
+  127.0.0.1:10025 inet    n       -       -       -       -       smtpd
+        -o content_filter=
+        -o local_recipient_maps=
+        -o relay_recipient_maps=
+        -o smtpd_restriction_classes=
+        -o smtpd_delay_reject=no
+        -o smtpd_client_restrictions=permit_mynetworks,reject
+        -o smtpd_helo_restrictions=
+        -o smtpd_sender_restrictions=
+        -o smtpd_recipient_restrictions=permit_mynetworks,reject
+        -o smtpd_data_restrictions=reject_unauth_pipelining
+        -o smtpd_end_of_data_restrictions=
+        -o mynetworks=127.0.0.0/8
+        -o smtpd_error_sleep_time=0
+        -o smtpd_soft_error_limit=1001
+        -o smtpd_hard_error_limit=1000
+        -o smtpd_client_connection_count_limit=0
+        -o smtpd_client_connection_rate_limit=0
+        -o receive_override_options=no_header_body_checks,no_unknown_recipient_checks,no_address_mappings
 
 
+Edit /var/spool/vacation/vacation.pl and change the configuration settings to match your system.
 
+Reload Postfix and you are done
+
+  postfix reload
