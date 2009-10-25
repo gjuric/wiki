@@ -136,8 +136,8 @@ The quota warning message must be located in  ''/etc/quotawarnmsg'' and it shoul
 
 X-Comment: Rename/Copy this file to quotawarnmsg, and make appropriate changes
 X-Comment: See deliverquota man page for more information
-From: Mail Delivery System <postmaster@diabmon.com>
-Reply-To: postmaster@diabmon.com
+From: Mail Delivery System <postmaster@example.com>
+Reply-To: postmaster@example.com
 To: Valued Customer:;
 Subject: Mail quota warning
 Mime-Version: 1.0
@@ -156,7 +156,7 @@ mysql> select * from mailbox;
 +-----------------+----------+-------------+--------------------+-----------+------------+--------------+---------------------+---------------------+--------+
 | username        | password | name        | maildir            | quota     | local_part | domain       | created             | modified            | active |
 +-----------------+----------+-------------+--------------------+-----------+------------+--------------+---------------------+---------------------+--------+
-| gog@diabmon.com | ommited  | Goran Juric | mail@example.com/  | 100000000 | mail       | example.com  | 2009-04-14 00:53:38 | 2009-04-14 00:53:38 |      1 |
+| gog@example.com | ommited  | Goran Juric | mail@example.com/  | 100000000 | mail       | example.com  | 2009-04-14 00:53:38 | 2009-04-14 00:53:38 |      1 |
 </code>
 
 Maildrop will get quota information using Couriers ''/etc/courier/authmysqlrc'' settings. Rhat is the reason why we have added 
