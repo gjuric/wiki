@@ -70,4 +70,4 @@ Reload Postfix and you are done
 To handle the Vacation using Postfix admin you will also have to edit its config.inc.php file and set
 
   $CONF['vacation'] = 'YES';
-  $CONF['vacation_domain'] = 'autoreply.diabmon.com';
+  $CONF['vacation_domain'] = 'autoreply.example.com';
