@@ -1,0 +1,23 @@
+====== Vacation ======
+
+Create user vacation on your system. This user will handle the vacation script and should have minimal privileges:
+
+  adduser vacation --no-create-home --disabled-login
+  mkdir /var/spool/vacation
+
+Copy the vacation.pl script (it is distributed with [[http://postfixadmin.sourceforge.net/|Postfix Admin]]) and you can find it inside the VIRTUAL_VACATION folder.
+
+  cp vacation.pl /var/spool/vacation/
+  chown -R vacation:vacation /var/spool/vacation/
+  chmod 700 /var/spool/vacation/vacation.pl
+
+Create a file /etc/postfix/transport
+
+  nano /etc/postfix/transport
+
+and paste:
+
+  autoreply.mail.com        vacation:
+
+
+
