@@ -25,7 +25,7 @@ Maildrop config file is located at ''/etc/maildroprc'', open it and replace the 
 # and in master.cf:
 #
 # maildrop  unix  -       n       n       -       -       pipe
-#  flags=DRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+#  flags=DRhu user=vmail:vmail argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
 #  ${extension} ${recipient} ${user} ${nexthop}
 #
 # /var/log/maildroprc.log needs to exist and owned by vmail:vmail and
