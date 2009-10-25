@@ -125,7 +125,7 @@ Edit ''/etc/postfix/master.cf'' and look for
 and replace it with
 
   maildrop  unix  -       n       n       -       -       pipe
-    flags=ODRhu user=vmail:daemon argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
+    flags=ODRhu user=vmail:vmail argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
     ${extension} ${recipient} ${user} ${nexthop}
 
 This line invokes maildrop with some parameters. ''-w 90'' tells maildrop to copy the quota warning message if the user is over 90% of his mailbox quota.
