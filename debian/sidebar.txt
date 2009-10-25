@@ -18,6 +18,7 @@
     - [[Debian:Courier]]
     - [[Debian:Anti-spam & Anti-virus]]
     - [[Debian:Maildrop]]
+    - [[Debian:Vacation]]
     - [[Debian:Webmail]]
   - Other services
     - [[Subversion]]
