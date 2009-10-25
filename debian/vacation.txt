@@ -66,3 +66,8 @@ Edit /var/spool/vacation/vacation.pl and change the configuration settings to ma
 Reload Postfix and you are done
 
   postfix reload
+
+To handle the Vacation using Postfix admin you will also have to edit its config.inc.php file and set
+
+  $CONF['vacation'] = 'YES';
+  $CONF['vacation_domain'] = 'autoreply.diabmon.com';
