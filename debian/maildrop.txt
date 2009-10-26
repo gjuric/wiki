@@ -128,6 +128,30 @@ and replace it with
     flags=ODRhu user=vmail:vmail argv=/usr/bin/maildrop -w 90 -d ${user}@${nexthop}
     ${extension} ${recipient} ${user} ${nexthop}
 
+As you can see we are invoking maildrop as user:group "vmail:vmail". Maildrop on Debian is compiled against the courier-authlib library which need access to the /var/run/courier/authdaemon folder. Debian package sets user/group permission to daemon:daemon on this folder. To force maildrop to work when invoked as vmail:vmail we need to change the group ownership of this folder to vmail.
+
+  chgrp vmail /var/run/courier/authdaemon
+
+A quote from the courier-users mailing list by Gordon Messmer:
+
+
+  See the NOTE in the first section of the INSTALL document:
+  
+    NOTE:
+  
+  
+  When using the standalone maildrop build with courier-authlib, one of the following configurations must be used:
+  
+  * Your mail server must invoke maildrop as the root user (the -d flag reads the mail account's uid and gid, then drops root) .
+  * Manually change the permissions on the maildrop binary to be setuid root.
+  * Manually change the permissions on the courier-authlib's socket directory (/usr/local/var/spool/authdaemon by default) to be globally readable or executable.
+  
+  The default permissions on courier-authlib's socket directory blocks world-access to the filesystem socket connected to courier-authlib's authentication daemon process. In order for maildrop to connect to the authentication   library, maildrop must either have root privileges (which will be temporary, as soon as maildrop determines the account's userid and groupid, it will drop root, before reading the maildroprc file), or courier-authlib's socket directory must have world read and execute permission.
+  
+  Note that if the permissions on the socket directory are changed, anyone on the system can connect and obtain any account's password!
+  
+  It is the system administrator's responsibility to choose the appropriate security policy when using the Courier Authentication Library.
+
 This line invokes maildrop with some parameters. ''-w 90'' tells maildrop to copy the quota warning message if the user is over 90% of his mailbox quota.
 
 The quota warning message must be located in  ''/etc/quotawarnmsg'' and it should look something like this:
