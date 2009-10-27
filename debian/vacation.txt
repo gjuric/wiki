@@ -1,4 +1,4 @@
-====== Vacation ======
+====== Vacation - Debian Lenny (5.0) / Ubuntu ======
 
 Vacation script that we will be using requires some Perl modules:
 
