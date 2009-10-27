@@ -1,4 +1,4 @@
-====== Mail server ======
+====== Mail server - Debian Lenny (5.0) / Ubuntu ======
 
 
 We are going to install Postfix as our MTA (SMTP server) and [[http://www.courier-mta.org/|Courier]] as our POP/IMAP server. [[http://www.postfix.org/|Postfix]] will use virtual domains, and information about our domains and users will be stored in the MySQL database. For managing virtual domains and users we will use [[http://postfixadmin.sourceforge.net/|PostfixAdmin]].
