@@ -132,6 +132,14 @@ All that is left to do is to restart amavisd-new and reload postfix configuratio
   /etc/init.d/amavis restart
   postfix reload
 
+If your DNS zone files have refreshed you will be able to use
+
+  amavisd-new testkeys
+
+and you should see something like this
+
+  TESTING: mail._domainkey.example.com      => pass
+
 ==== TODO ====
 
 Unfortunately you have to manually enter all the domains and the dkim keys you want to use. There is no way to read this information from the MySQL for now. 
