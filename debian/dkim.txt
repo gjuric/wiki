@@ -1,0 +1,116 @@
+====== DKIM ======
+
+Using DKIM signing of your outgoing emails gives you a better chance (though it depend on the recipients server configuration) that your mail does not get classified as spam. Bumping down the spam score of valid DKIM signed email can also prevent false positives.
+
+===== Enable DKIM checking for incoming emails =====
+
+To enable checking of DKIM in SpamAssasin edit /etc/spamassassin/v312.pre and uncomment this line
+
+  loadplugin Mail::SpamAssassin::Plugin::DKIM
+
+Make shure to install libmail-dkim-perl package
+
+  apt-get install libmail-dkim-perl
+
+Default score for DKIM signed domains are quite low, I usually set in my /etc/spamassassin/local.cf
+
+  score DKIM_VERIFIED -1
+  score DKIM_SIGNED    0
+
+so verified DKIM signed emails have a lower spam score. Although, be aware, spammers sometime also sign emails with DKIM. But you will at least be able to know for sure that the spam email came from the specified domain.
+
+Amavisd-new has a lot of advanced options that you can fine tune for DKIM signed emails, but you will have to look at the amavisd-new documentation for more information.
+
+===== Signing your outgoing mail =====
+
+We are going to sign are outgoing mail using amavisd-new DKIM signing (we are not going to use dkim-milters). For this to work as expected we will need to distinguish between mail coming from the incoming and outgoing emails going through our system because we only want to sign outgoing emails.
+
+We are going to achieve this by classifying users in postfix and sending our locally originating emails to amavisd-new on port 10026, and all other mail (incoming mail from other domains) we are going to send to amavisd-new on the port 10024 as we were doing before DKIM implementation.
+
+==== Postfix ====
+
+Open up /etc/postfix/main.cf, find the line ''content_filter = smtp-amavis:[127.0.0.1]:10024'' and replace it with:
+
+<code>
+# Amavis content filtering
+
+# On requing of messages sender_restriction are not checked so set the default filter that
+# does not sign messages but performs other checks (spam, virus)
+content_filter = smtp-amavis:[127.0.0.1]:10024
+
+# Is mail is coming from mynetwork or from authenticated users use amavis filtering on port 10026 (DKIM signing)
+smtpd_sender_restrictions =
+  check_sender_access regexp:/etc/postfix/tag_as_originating.re
+  permit_mynetworks
+  permit_sasl_authenticated
+  permit_tls_clientcerts
+# For other mail use amavis filtering on port 10024 (skips DKIM signing)
+  check_sender_access regexp:/etc/postfix/tag_as_foreign.re
+</code>
+
+Create ''/etc/postfix/tag_as_originating.re'' and insert:
+
+  /^/  FILTER smtp-amavis:[127.0.0.1]:10026
+
+Create ''/etc/postfix/tag_as_foreign.re'' and insert:
+
+  /^/  FILTER smtp-amavis:[127.0.0.1]:10024
+
+==== Amavisd-new ====
+
+We are going to use one key to sign all of our domain with the same key. When you move one of the virtual domains to another server you will either have to copy the same private key used for signing domains to the other server, or you will have to change the DNS record of the domain you are moving so that its TXT record showing the public key is updated with the new key that will be used on the other server (or disable DKIM signing).
+
+We are going to generate a new private key and store it in the ''/etc/amavis/dkim''.
+
+  amavisd-new genrsa /etc/amavis/dkim/atlantis-example-com.key.pem
+
+Do not give this key to anyone!!!
+
+Open ''/etc/amavisd.conf/50-user'' and replace
+
+  $inet_socket_port = [10024,9998];
+
+with
+
+  $inet_socket_port = [10024,10026,9998];
+
+You also need to enable the dkim signing, so add
+
+  $enable_dkim_signing = 1;  # loads DKIM signing code
+
+and add the key
+
+  # Set keys
+  dkim_key('example.com', 'mail', '/etc/amavis/dkim/atlantis-example-com.key.pem');
+
+If you want to generate a specific private key for every domain you you need to call dkim_key() function  for every domain you will be signing with the path to the key. ''mail'' in this example is a **selector** and you can put anything you like here. The value you enter here has to be inserted on your DNS record. 
+
+One more thing we need to do in the ''/etc/amavis/conf.d/50-user'' is to create a policy that will be used for mail coming on port 1026 that need to be signed:
+
+  # switch policy bank to 'ORIGINATING' for mail received on port 10026:
+  $interface_policy{'10026'} = 'ORIGINATING';
+  $policy_bank{'ORIGINATING'} = {  # mail originating from our users
+    originating => 1,  # indicates client is ours, allows signing
+    # force MTA to convert mail to 7-bit before DKIM signing
+    # to avoid later conversions which could destroy signature:
+    smtpd_discard_ehlo_keywords => ['8BITMIME'],
+  };
+
+Since this is the policy that is used for outgoing mail you can use it to change some other settings as well, but for this you will have to consult the amavisd-new documentation on [[http://amavisd.de.postfix.org/amavisd-new-docs.html#pbanks|policy banks]].
+
+==== DNS records ====
+
+To get the the TXT record which contains the public part of your key you have to run
+
+  amavisd-new showkeys
+
+and you should get something like this
+
+  mail._domainkey.example.com.   3600 TXT (
+    "v=DKIM1; p="
+    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDZNEarYcwLtVJ5y/gMUM8UimUX"
+    "Dp9oluwww1KdTGTQkg3OYyYfDyt8ZoutsxT6cnpMvG8D0jLLKy8rHGWE5I7pdQbL"
+    "qADufNR/08c7Ti3GSK3/WoWXQv/NzYLXaf7bdSk5f6+XZHCp/EKOuW6I/2Q7dv/B"
+    "+rAJJQZggHbolduwCwIDAQAB")
+
+you have to paste this into your DNS server configuration. If you are using an online tool to manage your domain name records (like goDaddys Total Controll) you will have to create a new TXT record
