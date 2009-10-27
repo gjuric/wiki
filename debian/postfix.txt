@@ -1,4 +1,4 @@
-====== Postfix ======
+====== Postfix - Debian Lenny (5.0) / Ubuntu ======
 
 If you haven't already installed Postfix, do it now:
 
