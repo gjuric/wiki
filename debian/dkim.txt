@@ -82,8 +82,11 @@ and add the key
 
   # Set keys
   dkim_key('example.com', 'mail', '/etc/amavis/dkim/atlantis-example-com.key.pem');
+  dkim_key('some-other-virtual.com', 'mail', '/etc/amavis/dkim/atlantis-example-com.key.pem');
+  dkim_key('another-virtual', 'mail', '/etc/amavis/dkim/atlantis-example-com.key.pem');
+  ....
 
-If you want to generate a specific private key for every domain you you need to call dkim_key() function  for every domain you will be signing with the path to the key. ''mail'' in this example is a **selector** and you can put anything you like here. The value you enter here has to be inserted on your DNS record. 
+If you want to generate a specific private key for every domain you just have to edit the path to the key for the domain you want to change. ''mail'' in this example is a **selector** and you can put anything you like here. The value you enter here has to be inserted on your DNS record. 
 
 One more thing we need to do in the ''/etc/amavis/conf.d/50-user'' is to create a policy that will be used for mail coming on port 1026 that need to be signed:
 
@@ -108,9 +111,16 @@ and you should get something like this
 
   mail._domainkey.example.com.   3600 TXT (
     "v=DKIM1; p="
-    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDZNEarYcwLtVJ5y/gMUM8UimUX"
+    "MIGfMA0GCSqGSIbHASU3KSMA84GNADCBiQKBgQDZNEarYcwLtVJ5y/gMUM8UimUX"
     "Dp9oluwww1KdTGTQkg3OYyYfDyt8ZoutsxT6cnpMvG8D0jLLKy8rHGWE5I7pdQbL"
     "qADufNR/08c7Ti3GSK3/WoWXQv/NzYLXaf7bdSk5f6+XZHCp/EKOuW6I/2Q7dv/B"
-    "+rAJJQZggHbolduwCwIDAQAB")
+    "+rAJJQZggHbolduwCwID2HBR")
 
-you have to paste this into your DNS server configuration. If you are using an online tool to manage your domain name records (like goDaddys Total Controll) you will have to create a new TXT record
+you have to paste this into your DNS server configuration. If you are using an online tool to manage your domain name records (like GoDaddys Total DNS Control) you will have to create a new TXT record and for the TXT name enter
+
+  mail._domainkey
+
+and for the value you will have to "glue" the multiple lines into one and erase all the quotation marks
+  v=DKIM1; p=MIGfMA0GCSqGSIbHASU3KSMA84GNADCBiQKBgQDZNEarYcwLtVJ5y/gMUM8UimUXDp9oluwww1KdTGTQkg3OYyYfDyt8ZoutsxT6cnpMvG8D0jLLKy8rHGWE5I7pdQbLqADufNR/08c7Ti3GSK3/WoWXQv/NzYLXaf7bdSk5f6+XZHCp/EKOuW6I/2Q7dv/B+rAJJQZggHbolduwCwID2HBR
+
+If you used another selector instead of ''mail'' you have to enter ''your-selector._domainkey''.
