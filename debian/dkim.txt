@@ -124,3 +124,15 @@ and for the value you will have to "glue" the multiple lines into one and erase 
   v=DKIM1; p=MIGfMA0GCSqGSIbHASU3KSMA84GNADCBiQKBgQDZNEarYcwLtVJ5y/gMUM8UimUXDp9oluwww1KdTGTQkg3OYyYfDyt8ZoutsxT6cnpMvG8D0jLLKy8rHGWE5I7pdQbLqADufNR/08c7Ti3GSK3/WoWXQv/NzYLXaf7bdSk5f6+XZHCp/EKOuW6I/2Q7dv/B+rAJJQZggHbolduwCwID2HBR
 
 If you used another selector instead of ''mail'' you have to enter ''your-selector._domainkey''.
+
+==== Wrap it all up ====
+
+All that is left to do is to restart amavisd-new and reload postfix configuration
+
+  /etc/init.d/amavis restart
+  postfix reload
+
+==== TODO ====
+
+Unfortunately you have to manually enter all the domains and the dkim keys you want to use. There is no way to read this information from the MySQL for now. 
+
