@@ -1,4 +1,4 @@
-====== DKIM ======
+====== DKIM - Debian Lenny (5.0) / Ubuntu  ======
 
 Using DKIM signing of your outgoing emails gives you a better chance (though it depend on the recipients server configuration) that your mail does not get classified as spam. Bumping down the spam score of valid DKIM signed email can also prevent false positives.
 
