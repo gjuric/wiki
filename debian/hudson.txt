@@ -81,7 +81,62 @@ Why we are at it, let's install some other useful tools for code metrics in you 
   pear channel-discover pear.pdepend.org 
   pear install pdepend/PHP_Depend-beta 
 
-===== Create your project =====
+===== Create a build file for your project =====
+
+This is an example build.xml file that you should place in the root folder of your project and commit to your SCM before creating a new project in Hudson.
+
+You will of course have to modify this file to match your environment.
+
+<code>
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="NAME_OF_YOUR_PROJECT" default="build" basedir=".">
+  <property name="basedir" value="${WORKSPACE}"/>
+  
+  <target name="init">
+    <!-- Create the different build directories -->
+    <mkdir dir="${basedir}/build/logs" />
+    <mkdir dir="${basedir}/build/api" />
+    <mkdir dir="${basedir}/build/coverage" />
+  </target>
+
+  <target name="clean">
+    <!-- Delete build directories from the previous run -->
+    <delete>
+      <fileset dir="${basedir}/build/logs" includes="**.*" />
+    </delete>
+    <delete>
+      <fileset dir="${basedir}/build/api" includes="**.*" />
+    </delete>                                                 
+    <delete>
+      <fileset dir="${basedir}/build/coverage" includes="**.*" />
+    </delete>
+  </target>
+
+  <!-- Default target -->
+  <target name="build" depends="clean,init,phpunit,php-documentor" />
+
+  <target name="php-documentor">
+    <exec executable="phpdoc" dir="${basedir}/gameplay">
+      <arg line="-ct type -t ${basedir}/build/api -ti 'Name of your project' -ue on -s -d ./ "/>
+    </exec>
+  </target>
+  
+  <target name="phpunit">
+    <exec executable="phpunit" dir="${basedir}/source/tests" failonerror="off">
+      <arg line="--log-xml ${basedir}/build/logs/phpunit.xml
+                 --log-pmd ${basedir}/build/logs/phpunit.pmd.xml
+                 --log-metrics ${basedir}/build/logs/metrics.xml
+                 --coverage-xml  ${basedir}/build/logs/coverage.xml
+                 --coverage-html ${basedir}/build/coverage
+                 --coverage-clover ${basedir}/build/coverage/clover.xml
+                 --configuration phpunit.xml
+                " />
+    </exec>
+  </target>
+</project>
+</code>
+
+===== Create your project in Hudson =====
 
 Return to the Hudsons front page and select "create a new jobs".
 
@@ -100,4 +155,8 @@ Check "Publish testing tools result report" select phpUnit from the dropdown men
 
 Check "Publish PMD analysis results" and enter for PMD results enter ''build/logs/phpunit.pmd.xml''
 
+Save the setting an your first build should start.
 
+That's all. 
+
+You can visit my blog at [[http://gogs.info/]].
