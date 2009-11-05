@@ -25,3 +25,4 @@
     - [[Subversion]]
     - [[Redmine]]
     - [[Debian:Munin]]
+    . [[Debian:Hudson]]
