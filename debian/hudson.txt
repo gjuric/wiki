@@ -81,6 +81,13 @@ Why we are at it, let's install some other useful tools for code metrics in you 
   pear channel-discover pear.pdepend.org 
   pear install pdepend/PHP_Depend-beta 
 
+===== phpDocumentor =====
+
+To install phpDocumentor enter
+
+  pear upgrade PhpDocumentor
+
+
 ===== Create a build file for your project =====
 
 This is an example build.xml file that you should place in the root folder of your project and commit to your SCM before creating a new project in Hudson.
