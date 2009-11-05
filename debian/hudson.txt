@@ -42,10 +42,10 @@ Hudson should now be available through your browser at http://you-ip-address:808
 
 Once on Hudsons front page select **Manage Hudson** and then **Manage Plugins** and install this plugins:
 
-* Hudson Clover plugin
-* Hudson Checkstyle Plug-in
-* Hudson PMD Plug-in
-* Hudson Phing plugin (if you are using Phing)
+  * Hudson Clover plugin
+  * Hudson Checkstyle Plug-in
+  * Hudson PMD Plug-in
+  * Hudson Phing plugin (if you are using Phing)
 
 Return to the Manage Hudson page and select **Configure System**. If you are using Ant, select **Add Ant**, uncheck "Install automatically" and under name enter "Ant 1.7.0" and for ANT_HOME enter ''/usr/share/ant'' . 
 
