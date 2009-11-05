@@ -154,15 +154,17 @@ Return to the Hudsons front page and select "create a new jobs".
   - for "Build Triggers" select Poll SCM and enter "* * * * *" this will make Hudson poll your repository every minute and trigger the build if if there are updates in your SCM
   - click on "Add build step" and select either Ant of Phing depending on what you are using to run your builds. I have selected "Invoke Ant", and selected the Ant version we configured earlier on for the "Targets" I have entered "build" since this is the name of the build target I am using to build my project
 
-Other steps are optional depending on what you needs. I am using phpDocumentor to generate API docs for my project so I have selected Publish Javadoc and have entered "build/api/" as my Javadoc directory.
+Other steps are optional and depend on you needs. I am using phpDocumentor to generate API docs for my project so I have selected Publish Javadoc and have entered "build/api/" as my Javadoc directory.
 
 If you want to generate Clover Coverage Report using PHPUnit select Clover Coverage Report and enter ''build/coverage'' for Clover report directory and ''clover.xml'' for Clover report file name.
+
+If you are using PHPUnit you probably want to check this options as well:
 
 Check "Publish testing tools result report" select phpUnit from the dropdown menu and enter ''build/logs/*.xml'' for PHPUnit Pattern.
 
 Check "Publish PMD analysis results" and enter for PMD results enter ''build/logs/phpunit.pmd.xml''
 
-Save the setting an your first build should start.
+Save the setting and your first build should start.
 
 That's all. 
 
