@@ -154,6 +154,12 @@ Return to the Hudsons front page and select "create a new jobs".
   - for "Build Triggers" select Poll SCM and enter "* * * * *" this will make Hudson poll your repository every minute and trigger the build if if there are updates in your SCM
   - click on "Add build step" and select either Ant of Phing depending on what you are using to run your builds. I have selected "Invoke Ant", and selected the Ant version we configured earlier on for the "Targets" I have entered "build" since this is the name of the build target I am using to build my project
 
+If you are using Ant and the variation of the build file provided on this page click "Advanced" under Ant configuration and for Properties enter:
+
+  basedir=/var/lib/hudson/jobs/NAME_OF_YOUR_PROJECT/workspace
+
+''/var/lib/hudson/jobs/NAME_OF_YOUR_PROJECT/'' is the place where Hudson will keep all informations about your project so it is important to pass this property to Ant so Ant can resolve path names that we are using in the Ants build file.
+
 Other steps are optional and depend on you needs. I am using phpDocumentor to generate API docs for my project so I have selected Publish Javadoc and have entered "build/api/" as my Javadoc directory.
 
 If you want to generate Clover Coverage Report using PHPUnit select Clover Coverage Report and enter ''build/coverage'' for Clover report directory and ''clover.xml'' for Clover report file name.
