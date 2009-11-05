@@ -1,0 +1,82 @@
+====== Hudson on Debian Lenny ======
+
+===== Hudson & Java installation =====
+
+
+Hudson is written in Java so we will need to install Java, and to make things simpler we will install Hudson from its reporitory.
+
+Edit ''/etc/apt/sources.list'' and append every line that ends with "lenny mail" with " contrib non-free" and at the end of the file add this line
+
+  deb http://hudson-ci.org/debian binary/
+
+This is needed because Java is not in Debians main repository. Your sources.list should look something like this
+
+  # deb http://ftp.hr.debian.org/debian/ lenny main
+  
+  deb http://ftp.hr.debian.org/debian/ lenny main contrib non-free
+  deb-src http://ftp.hr.debian.org/debian/ lenny main contrib non-free   
+
+  deb http://security.debian.org/ lenny/updates main contrib non-free
+  deb-src http://security.debian.org/ lenny/updates main contrib non-free
+  
+  deb http://volatile.debian.org/debian-volatile lenny/volatile main contrib non-free
+  deb-src http://volatile.debian.org/debian-volatile lenny/volatile main contrib non-free
+  
+  deb http://hudson-ci.org/debian binary/
+
+Update apt information
+
+  apt-get update
+
+To install Java, Hudson and Ant (you do not need Ant if you plan to use Phing for building your project)
+
+  apt-get install sun-java5-jdk hudson ant
+
+To start Hudson after installation enter
+
+  /etc/init.d/hudson start
+
+Hudson should now be available through your browser at http://you-ip-address:8080 
+
+===== Building PHP projects with Hudson =====
+
+Once on Hudsons front page select **Manage Hudson** and then **Manage Plugins** and install this plugins:
+
+* Hudson Clover plugin
+* Hudson Checkstyle Plug-in
+* Hudson PMD Plug-in
+* Hudson Phing plugin (if you are using Phing)
+
+Return to the Manage Hudson page and select **Configure System**. If you are using Ant, select **Add Ant**, uncheck "Install automatically" and under name enter "Ant 1.7.0" and for ANT_HOME enter ''/usr/share/ant'' . 
+
+You can also enter settings for E-mail notifications.
+
+===== PHP code metrics =====
+
+Running automatic unit tests is probably the main reason for having a continuous integration server so lets install PHPUnit.
+
+First make sure you have pear installed
+
+  apt-get install php-pear
+
+To get the latest version of PHPUnit we will have to update our pear installer as well.
+
+  pear upgrade pear
+  pear channel-update pear.php.net
+  pear channel-discover pear.phpunit.de
+  pear install phpunit/PHPUnit
+
+Why we are at it, let's install some other useful tools for code metrics in you PHP projects.
+
+**PHP CodeSniffer**:
+
+  pear install PHP_CodeSniffer
+
+**phploc** (you must have pear channel pear.phpunit.de that we added while installing PHPUnit):
+
+  pear install phpunit/phploc
+
+**PHP Depend**:
+
+  pear channel-discover pear.pdepend.org 
+  pear install pdepend/PHP_Depend-beta 
