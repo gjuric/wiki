@@ -1,7 +1,6 @@
 ====== Hudson on Debian Lenny ======
 
-===== Hudson & Java installation =====
-
+===== Install Hudson & Java =====
 
 Hudson is written in Java so we will need to install Java, and to make things simpler we will install Hudson from its reporitory.
 
@@ -15,7 +14,7 @@ This is needed because Java is not in Debians main repository. Your sources.list
   
   deb http://ftp.hr.debian.org/debian/ lenny main contrib non-free
   deb-src http://ftp.hr.debian.org/debian/ lenny main contrib non-free   
-
+  
   deb http://security.debian.org/ lenny/updates main contrib non-free
   deb-src http://security.debian.org/ lenny/updates main contrib non-free
   
@@ -38,14 +37,15 @@ To start Hudson after installation enter
 
 Hudson should now be available through your browser at http://you-ip-address:8080 
 
-===== Building PHP projects with Hudson =====
+===== PHP Hudson Plugins =====
 
 Once on Hudsons front page select **Manage Hudson** and then **Manage Plugins** and install this plugins:
 
-  * Hudson Clover plugin
-  * Hudson Checkstyle Plug-in
-  * Hudson PMD Plug-in
-  * Hudson Phing plugin (if you are using Phing)
+  * Clover plugin
+  * Checkstyle Plug-in
+  * PMD Plug-in
+  * xUnit Plugin
+  * Phing plugin (if you are using Phing)
 
 Return to the Manage Hudson page and select **Configure System**. If you are using Ant, select **Add Ant**, uncheck "Install automatically" and under name enter "Ant 1.7.0" and for ANT_HOME enter ''/usr/share/ant'' . 
 
@@ -80,3 +80,24 @@ Why we are at it, let's install some other useful tools for code metrics in you 
 
   pear channel-discover pear.pdepend.org 
   pear install pdepend/PHP_Depend-beta 
+
+===== Create your project =====
+
+Return to the Hudsons front page and select "create a new jobs".
+
+  - Enter job name
+  - select "Build a free-style software project"
+  - under "Source Code Management" select your SCM (I use Subversion) and enter required details (after entering your Repository URL Hudson will provide you with an option to enter username and password if they are needed for access to your repository
+  - for "Local module directory (optional)" enter "source"
+  - for "Build Triggers" select Poll SCM and enter "* * * * *" this will make Hudson poll your repository every minute and trigger the build if if there are updates in your SCM
+  - click on "Add build step" and select either Ant of Phing depending on what you are using to run your builds. I have selected "Invoke Ant", and selected the Ant version we configured earlier on for the "Targets" I have entered "build" since this is the name of the build target I am using to build my project
+
+Other steps are optional depending on what you needs. I am using phpDocumentor to generate API docs for my project so I have selected Publish Javadoc and have entered "build/api/" as my Javadoc directory.
+
+If you want to generate Clover Coverage Report using PHPUnit select Clover Coverage Report and enter ''build/coverage'' for Clover report directory and ''clover.xml'' for Clover report file name.
+
+Check "Publish testing tools result report" select phpUnit from the dropdown menu and enter ''build/logs/*.xml'' for PHPUnit Pattern.
+
+Check "Publish PMD analysis results" and enter for PMD results enter ''build/logs/phpunit.pmd.xml''
+
+
