@@ -124,7 +124,7 @@ You will of course have to modify this file to match your environment.
   </target>
 
   <!-- Default target -->
-  <target name="build" depends="clean,init,phpunit,php-documentor" />
+  <target name="build" depends="init,phpunit,php-documentor" />
 
   <target name="php-documentor">
     <exec executable="phpdoc" dir="${basedir}/gameplay">
@@ -146,6 +146,14 @@ You will of course have to modify this file to match your environment.
   </target>
 </project>
 </code>
+
+After the first successful build you can replace 
+
+  <target name="build" depends="init,phpunit,php-documentor" />
+
+with
+
+<target name="build" depends="clean,init,phpunit,php-documentor" />
 
 ===== Create your project in Hudson =====
 
