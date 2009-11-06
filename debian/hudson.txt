@@ -184,6 +184,12 @@ Check "Publish PMD analysis results" and enter for PMD results enter ''build/log
 
 Save the setting and your first build should start.
 
-That's all. 
+===== Notes =====
+
+PHPUnit requres a lot of memory, and default memory limit for PHP running on CLI is 32M. Edit ''/etc/php/cli/php.ini'' and set memory_limit to 512MB if you have enough RAM installed.
+
+Looking at the console output will help you to determine what went wrong during the build process.
+
+That's about it.
 
 You can visit my blog at [[http://gogs.info/]].
