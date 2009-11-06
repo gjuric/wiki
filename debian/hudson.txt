@@ -66,6 +66,10 @@ To get the latest version of PHPUnit we will have to update our pear installer a
   pear channel-discover pear.phpunit.de
   pear install phpunit/PHPUnit
 
+PHPUnit requires Xdebug PHP extension, to install it
+
+  apt-get install php5-xdebug
+
 Why we are at it, let's install some other useful tools for code metrics in you PHP projects.
 
 **PHP CodeSniffer**:
