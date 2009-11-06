@@ -25,6 +25,7 @@ Detailed How To on setting up a Debian Lenny server setup. Instructions include 
     - [[Debian:Subversion]]
     - [[Redmine]]
     - [[Debian:Munin]]
+    - [[Debian:Hudson]]
 
 ====== CentOS ======
 
