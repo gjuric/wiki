@@ -4,7 +4,7 @@
 
 Hudson is written in Java so we will need to install Java, and to make things simpler we will install Hudson from its reporitory.
 
-Edit ''/etc/apt/sources.list'' and append every line that ends with "lenny mail" with " contrib non-free" and at the end of the file add this line
+Edit ''/etc/apt/sources.list'' and append every line that ends with "lenny main" with " contrib non-free" and at the end of the file add this line
 
   deb http://hudson-ci.org/debian binary/
 
