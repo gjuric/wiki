@@ -29,7 +29,7 @@ Update apt information
 
 To install Java, Hudson and Ant (you do not need Ant if you plan to use Phing for building your project)
 
-  apt-get install sun-java5-jdk hudson ant
+  apt-get install sun-java6-jdk hudson ant
 
 To start Hudson after installation enter
 
