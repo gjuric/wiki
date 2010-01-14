@@ -98,6 +98,6 @@ Restar munin-node
 
 If some of the plugins look like they do not work you can ran the manually 
 
-  sh /etc/munin/plugins/name-of-the-plugin
+  munin-run /etc/munin/plugins/name-of-the-plugin
 
-to get some idea why the do not collect information.
+to get some idea why they do not collect information.
