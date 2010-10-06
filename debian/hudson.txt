@@ -64,6 +64,8 @@ To get the latest version of PHPUnit we will have to update our pear installer a
   pear upgrade pear
   pear channel-update pear.php.net
   pear channel-discover pear.phpunit.de
+  pear channel-discover components.ez.no
+  pear channel-discover pear.symfony-project.com
   pear install phpunit/PHPUnit
 
 PHPUnit requires Xdebug PHP extension, to install it
