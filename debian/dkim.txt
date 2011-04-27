@@ -1,5 +1,7 @@
 ====== DKIM - Debian Lenny (5.0) / Ubuntu  ======
 
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 Using DKIM signing of your outgoing emails gives you a better chance (though it depend on the recipients server configuration) that your mail does not get classified as spam. Bumping down the spam score of valid DKIM signed email can also prevent false positives.
 
 ===== Enable DKIM checking for incoming emails =====
