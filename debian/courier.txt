@@ -1,4 +1,7 @@
 ====== Courier - Debian Lenny (5.0) / Ubuntu ======
+
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 ===== Installation =====
 
 To install Courier with support for MySQL authorisation and POP3, POP3-SSL, IMAP and IMAP-SSL access to mailboxes you run:
