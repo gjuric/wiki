@@ -1,5 +1,7 @@
 ====== Webmail ======
 
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 ==== Install Roundcube ====
 
 We will install roundcube to the /var/www folder. This way, when somebody enters mail.somedomain-we-host.com they will see Roundcube.
