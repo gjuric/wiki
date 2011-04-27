@@ -1,5 +1,7 @@
 ====== Postfix - Debian Lenny (5.0) / Ubuntu ======
 
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 If you haven't already installed Postfix, do it now:
 
   apt-get install postfix telnet mailx
