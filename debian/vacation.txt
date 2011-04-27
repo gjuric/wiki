@@ -1,5 +1,7 @@
 ====== Vacation - Debian Lenny (5.0) / Ubuntu ======
 
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 Vacation script that we will be using requires some Perl modules:
 
   apt-get install libmail-sender-perl libdbd-pg-perl libemail-valid-perl libmime-perl liblog-log4perl-perl liblog-dispatch-perl libgetopt-argvfile-perl libmime-charset-perl libmime-encwords-perl
