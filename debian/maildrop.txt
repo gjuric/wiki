@@ -1,5 +1,7 @@
 ====== Maildrop ======
 
+[[http://gogs.info/books/debian-mail/|This article is outdated. Updated version on building a mail server on Debian 6 is published as a free eBook here.]]
+
 To achieve automatic moving of messages to the Junk folder we will have to use Maildrop instead of the Postix local delivery agent. This, on the other hand, has some drawbacks. When we tell Postix to use Maildrop as a local delivery agent, we will have to create Maildirs for new mailboxes by hand every time we create a new email account. But do not worry, this step can be automated.
 
 To install maildrop, run
